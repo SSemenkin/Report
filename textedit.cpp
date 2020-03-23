@@ -39,7 +39,9 @@ void TextEdit::insertCompletion(const QString &completion)
     int extra = completion.length() - c->completionPrefix().length();
     tc.movePosition(QTextCursor::Left);
     tc.movePosition(QTextCursor::EndOfWord);
-    tc.insertText(completion.right(extra));
+    for(int i=0;i<c->completionPrefix().length();i++)
+        tc.deletePreviousChar();
+    tc.insertText(completion);
     setTextCursor(tc);
 }
 
