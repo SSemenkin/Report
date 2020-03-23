@@ -6,8 +6,8 @@ Settings::Settings(QWidget *parent) :
     ui(new Ui::Settings)
 {
     ui->setupUi(this);
-    this->setWindowTitle("Settings");
-    this->setWindowFlag(Qt::WindowCloseButtonHint);
+    this->setWindowTitle("Connection Settings");
+    this->setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     settings = new QSettings("Smena LTD.","Report",this);
 
     IP = settings->value("BSC IP","10.181.66.10").toString();

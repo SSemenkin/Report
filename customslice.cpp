@@ -176,7 +176,6 @@ void CustomSlice::readData() //Telnet Connection
             is_msp_print = false;
 
             socket->disconnectFromHost();
-            qDebug() << "disconnectFromHost";
             a = new LoadStateCheck(cell);
             a->show();
         }
