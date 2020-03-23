@@ -373,7 +373,7 @@ QVector<QString> AnalyseData::Cells()
 
     for(int i=0;i<hideModel->rowCount();i++)
     {
-        if(hideModel->data(hideModel->index(i,indexOfLAC)).toString()!="50331")
+        if(hideModel->data(hideModel->index(i,indexOfLAC)).toString()!="50331" && hideModel->data(hideModel->index(i,indexOfLAC)).toString()!="50333")
         {
             QString sec;
             QString tmpName = hideModel->data(hideModel->index(i,indexOfCell)).toString();
