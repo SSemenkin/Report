@@ -1,0 +1,36 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/abonent.png</file>
+        <file>images/all_calls.png</file>
+        <file>images/allTime.png</file>
+        <file>images/asc.png</file>
+        <file>images/brba.png</file>
+        <file>images/cahrt.png</file>
+        <file>images/cdr.png</file>
+        <file>images/cdr2.png</file>
+        <file>images/clear-symbol.png</file>
+        <file>images/connect.png</file>
+        <file>images/day.png</file>
+        <file>images/desc.png</file>
+        <file>images/detail.png</file>
+        <file>images/execute.png</file>
+        <file>images/gifted.gif</file>
+        <file>images/goto.png</file>
+        <file>images/haisenberg.png</file>
+        <file>images/help.png</file>
+        <file>images/imei.png</file>
+        <file>images/incoming.png</file>
+        <file>images/main.png</file>
+        <file>images/outgoing.png</file>
+        <file>images/period.png</file>
+        <file>images/save.png</file>
+        <file>images/show.png</file>
+        <file>images/sort.png</file>
+        <file>images/vor.png</file>
+        <file>images/xCopy.png</file>
+        <file>images/cell.png</file>
+        <file>images/direction.png</file>
+        <file>images/main.ico</file>
+        <file>wordlist.txt</file>
+    </qresource>
+</RCC>
