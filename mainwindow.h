@@ -96,6 +96,9 @@ private slots:
     void abonentAnalyse(int);
 
 
+
+    void on_driverCombo_currentIndexChanged(int index);
+
 private:
 
 

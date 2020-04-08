@@ -10,9 +10,6 @@ MainWindow::MainWindow(QWidget *parent) :
     onStart();
     DbConnect();
     AbonentSelected = false;
-
-
-
 }
 
 MainWindow::~MainWindow()
@@ -47,13 +44,9 @@ QString MainWindow::getDatesToChart()
     return requestPart;
 }
 
-
-
 void MainWindow::onStart()
-{
-
-
-
+{ 
+    ui->driverCombo->addItems({"QMYSQL","QPSQL"});
     completer = new QCompleter(sql.split("\r\n"),this);
     //completer->setModel(modelFromFile("wordlist.txt"));
     //completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
@@ -129,7 +122,7 @@ void MainWindow::onStart()
     ui->pushButton_5->setToolTip("Отобразить даты, присутствующие в БД");
     on_radioButton_2_clicked();
     requestBegin = "select tag,callingPartyNumber,calledPartyNumber,dateForStartOfCharge,timeForStartOfCharge,chargeableDuration,"
-                   "callingSubscriberIMSI,callingSubscriberIMEI,firstCallingLAC,firstCallingCellID,lastCallingLAC,lastCallingCellID ";
+                   "callingSubscriberIMSI,callingSubscriberIMEI,firstCallingLAC,firstCallingCellID,lastCallingLAC,lastCallingCellID from cdr";
 
     if(!QDir("results").exists()) QDir().mkdir("results");
     if(!QDir("results\\MN").exists()) QDir().mkdir("results\\MN");
@@ -153,7 +146,7 @@ void MainWindow::onStart()
     IMEI->setValidator(new QRegExpValidator(QRegExp("[0-9]{15}")));
     abonentLine->setValidator(new QRegExpValidator(QRegExp("[0-9]{15}")));
 
-    request_MN = requestBegin + "FROM `cdr` WHERE calledPartyNumber not like '380%"
+    request_MN = requestBegin + "from cdr WHERE calledPartyNumber not like '380%"
                  "' and tag = '1' and calledPartyNumber not like '7%' and calledPartyNumber "
                  "not like '72%' and calledPartyNumber not like '072%' and calledPartyNumber not like '071%' "
                  "and calledPartyNumber not like '71%' and calledPartyNumber  <> 101 and calledPartyNumber  <> 102 "
@@ -166,6 +159,8 @@ void MainWindow::onStart()
     connect(abonentLine,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
     connect(IMEI,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
 
+
+
     ui->groupBox_2->setFixedWidth(850);
     ui->groupBox->setAlignment(Qt::AlignLeft);
     ui->groupBox_6->setAlignment(Qt::AlignLeft);
@@ -175,9 +170,9 @@ void MainWindow::onStart()
 void MainWindow::DbConnect()
 {
 
-        db = QSqlDatabase::addDatabase("QMYSQL","first_connection");
+        db = QSqlDatabase::addDatabase(ui->driverCombo->currentText(),ui->driverCombo->currentText()+"first_connection");
         db.setHostName(ui->host->text());
-        db.setPort(3306);
+        db.setPort(ui->port->text().toInt());
         db.setDatabaseName(ui->DBname->text());
         db.setUserName(ui->login->text());
         db.setPassword(ui->password->text());
@@ -214,7 +209,7 @@ void MainWindow::on_showData_clicked()
     if(ui->radioButton_5->isChecked() && ui->comboBox->currentIndex()==0)
     {
         //Россия
-        QString request = requestBegin +"from cdr where tag='1' and calledPartyNumber like '7%' "+DateB()+";";
+        QString request = requestBegin +" where tag='1' and calledPartyNumber like '7%' "+DateB()+";";
         qDebug() << request;
         model->setQuery(request,db);
         SetModel(request);
@@ -223,7 +218,7 @@ void MainWindow::on_showData_clicked()
     if(ui->radioButton_5->isChecked() && ui->comboBox->currentIndex()==1)
     {
        //Украина
-        QString request = requestBegin + "from cdr where tag='1' and calledPartyNumber like '380%' and calledPartyNumber not like '38072%' and calledPartyNumber not "
+        QString request = requestBegin + " where tag='1' and calledPartyNumber like '380%' and calledPartyNumber not like '38072%' and calledPartyNumber not "
                           "like '72%' and calledPartyNumber not like '072%' and calledPartyNumber not like '38071%' and calledPartyNumber not like '071%' and calledPartyNumber not like '71%' and "
                                          "calledPartyNumber not like '380642%' and calledPartyNumber not like '3806431%' and calledPartyNumber not like '3806442%' and calledPartyNumber not like '3806443%' "
                                          "and calledPartyNumber not like '3806446%' and calledPartyNumber not like '3806435%' "
@@ -346,7 +341,7 @@ void MainWindow::on_showData_clicked()
             return;
         }
 
-        QString request = requestBegin + "from cdr where tag='1' and callingSubscriberIMEI like '%"+IMEI->text()+"%' " + DateB()+";";
+        QString request = requestBegin + " where tag='1' and callingSubscriberIMEI like '%"+IMEI->text()+"%' " + DateB()+";";
         model->setQuery(request,db);
         SetModel(request);
 
@@ -355,7 +350,7 @@ void MainWindow::on_showData_clicked()
     {
         //Городские
 
-        QString request = requestBegin + "from cdr where tag='1' and ((calledPartyNumber like '0642%' or calledPartyNumber like '380642%') or"
+        QString request = requestBegin + " where tag='1' and ((calledPartyNumber like '0642%' or calledPartyNumber like '380642%') or"
                                          "(calledPartyNumber like '06431%' or calledPartyNumber like '3806431%') or "
                                          "(calledPartyNumber like '06442%' or calledPartyNumber like '3806442%') or "
                                          "(calledPartyNumber like '06443%' or calledPartyNumber like '3806443%') or "
@@ -386,7 +381,7 @@ void MainWindow::on_showData_clicked()
         }
 
         QString request;
-        abonentLine->text().isEmpty() ? request = requestBegin + "from cdr where tag='1' " +DateB()+";"
+        abonentLine->text().isEmpty() ? request = requestBegin + " where tag='1' " +DateB()+";"
                 : request = requestBegin + "from cdr where tag='1' and (callingPartyNumber = '"+abonentLine->text()+"' or callingPartyNumber ='0"+abonentLine->text()+"' or callingPartyNumber ='380"+abonentLine->text()+"' )" + DateB()+";";
 
         model->setQuery(request,db);
@@ -414,7 +409,7 @@ void MainWindow::on_showData_clicked()
 
         QString request;
 
-         abonentLine->text().isEmpty()?  request = requestBegin + "from cdr where tag='1' " +DateB()+";"
+         abonentLine->text().isEmpty()?  request = requestBegin + " where tag='1' " +DateB()+";"
                  :request = requestBegin + "from cdr where tag='1' and (calledPartyNumber = '380"+abonentLine->text()+
                  "' or calledPartyNumber ='"+abonentLine->text()+"' or calledPartyNumber = '0"+abonentLine->text()+"') " + DateB()+";";
         model->setQuery(request,db);
@@ -441,8 +436,8 @@ void MainWindow::on_showData_clicked()
         }
 
         QString request;
-         abonentLine->text().isEmpty() ? request = requestBegin + "from cdr where tag='1' " +DateB()+";" :
-                 request = requestBegin + "from cdr where tag = '1' and ((calledPartyNumber = '380"+abonentLine->text()+
+         abonentLine->text().isEmpty() ? request = requestBegin + " where tag='1' " +DateB()+";" :
+                 request = requestBegin + " where tag = '1' and ((calledPartyNumber = '380"+abonentLine->text()+
                  "' or calledPartyNumber = '0"+abonentLine->text()+"' or calledPartyNumber='"+abonentLine->text()+"') or (callingPartyNumber = '"
                 +abonentLine->text()+"' or callingPartyNumber='380"+abonentLine->text()+"' or callingPartyNumber='0"+abonentLine->text()+"')) " + DateB()+";";
         model->setQuery(request,db);
@@ -590,7 +585,7 @@ void MainWindow::on_pushButton_2_clicked()
     AbonentSelected = false;
     if(!db.isOpen())
     {
-        QMessageBox::critical(this,"Ошибка","Прежде нужно открыть базу данных/подключиться к ней");
+        QMessageBox::critical(this,"Ошибка",db.lastError().text());
         QApplication::setOverrideCursor(Qt::ArrowCursor);
         return;
     }
@@ -663,10 +658,10 @@ void MainWindow::SetModel(QString request)
 
 void MainWindow::on_pushButton_4_clicked()
 {
-    QSqlDatabase::contains("first_connection") ? db = QSqlDatabase::database("first_connection") :
-            db = QSqlDatabase::addDatabase("QMYSQL","first_connection");
+    QSqlDatabase::contains(ui->driverCombo->currentText()+"first_connection") ? db = QSqlDatabase::database(ui->driverCombo->currentText()+"first_connection") :
+            db = QSqlDatabase::addDatabase(ui->driverCombo->currentText(),ui->driverCombo->currentText()+"first_connection");
     db.setHostName(ui->host->text());
-    db.setPort(3306);
+    db.setPort(ui->port->text().toInt());
     db.setDatabaseName(ui->DBname->text());
     db.setUserName(ui->login->text());
     db.setPassword(ui->password->text());
@@ -683,7 +678,7 @@ void MainWindow::on_pushButton_4_clicked()
         }
         else
         {
-            QMessageBox::critical(this,"Error","database not open");
+            QMessageBox::critical(this,"Error","database not open\n"+db.lastError().text());
             return;
         }
     }
@@ -867,7 +862,6 @@ void MainWindow::on_pushButton_5_clicked()
 
 void MainWindow::on_pushButton_6_clicked()
 {
-
         analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart());
         if(AbonentSelected && model->query().isSelect())
         {
@@ -967,8 +961,6 @@ void MainWindow::abonentAnalyse(int analyseColumn)
     ui->duration->setText("Длительность разговоров\nв среднем составляет: "+QString::number(temporarySum)+" секунд");
 }
 
-
-
 QAbstractItemModel *MainWindow::modelFromFile(const QString& fileName)
 {
     QFile file(fileName);
@@ -991,4 +983,28 @@ QAbstractItemModel *MainWindow::modelFromFile(const QString& fileName)
     QGuiApplication::restoreOverrideCursor();
 #endif
     return new QStringListModel(words, completer);
+}
+
+void MainWindow::on_driverCombo_currentIndexChanged(int index)
+{
+    ui->host->setText("193.228.160.5");
+    if(index == 0)
+    {
+        ui->port->setText("3306");
+        ui->DBname->setText("cdrmss1lug");
+        ui->login->setText("ebondarenko");
+        ui->password->setText("sQtgkuUTP9j8m0XF");
+        requestBegin.replace("from mss","from cdr");
+        request_MN.replace("from cdr","from mss");
+    }
+    else
+    {
+        ui->port->setText("5432");
+        ui->DBname->setText("cdr");
+        ui->login->setText("smena");
+        ui->password->setText("postgres20094");
+        requestBegin.replace("from cdr","from mss");
+        request_MN.replace("from mss","from cdr");
+
+    }
 }

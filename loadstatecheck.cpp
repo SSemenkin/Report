@@ -80,6 +80,7 @@ bool LoadStateCheck::subString(QString buff, QString findStr)
     }
     return false;
 }
+
 LoadStateCheck::~LoadStateCheck()
 {
 

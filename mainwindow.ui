@@ -392,7 +392,7 @@ padding-right:5px;</string>
        </item>
        <item row="0" column="2">
         <layout class="QGridLayout" name="gridLayout_7">
-         <item row="0" column="0">
+         <item row="2" column="0">
           <widget class="QLabel" name="label_2">
            <property name="styleSheet">
             <string notr="true">border:none;</string>
@@ -402,27 +402,7 @@ padding-right:5px;</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_3">
-           <property name="styleSheet">
-            <string notr="true">border:none;</string>
-           </property>
-           <property name="text">
-            <string>Имя БД</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_4">
-           <property name="styleSheet">
-            <string notr="true">border:none;</string>
-           </property>
-           <property name="text">
-            <string>Логин</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
+         <item row="5" column="0">
           <widget class="QLabel" name="label_5">
            <property name="styleSheet">
             <string notr="true">border:none;</string>
@@ -432,10 +412,50 @@ padding-right:5px;</string>
            </property>
           </widget>
          </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Драйвер</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="styleSheet">
+            <string notr="true">border:none;</string>
+           </property>
+           <property name="text">
+            <string>Имя БД</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="styleSheet">
+            <string notr="true">border:none;</string>
+           </property>
+           <property name="text">
+            <string>Логин</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Порт</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item row="0" column="3">
         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QComboBox" name="driverCombo"/>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="port"/>
+         </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_6">
            <item>
@@ -759,7 +779,7 @@ padding-right:5px;</string>
      <x>0</x>
      <y>0</y>
      <width>1512</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="datd" stdset="0">

@@ -21,12 +21,12 @@ AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates)
     updateWindowWidgets();
     QVector<QString> cellFind = Cells();
 
-    if(openLocalDataBase())
-    {
+//    if(openLocalDataBase())
+//    {
         QVector<QVector<int>> loadData = prepareData(7,cellFind);
         QVector<QVector<int>> icmBandData = prepareData(6,cellFind);
         GenerateChart(loadData,icmBandData,getDateList(),cellFind);
-    }
+//    }
     //else exit(1);
 }
 
@@ -41,6 +41,7 @@ void AnalyseData::GenerateChart(QVector<QVector<int>> loadCell
 
     if(chastoti.size()!=0)
     {
+        qDebug() << chastoti;
         QChart *pieChart = new QChart;
         pieChart->legend()->setAlignment(Qt::AlignRight);
         pieChart->setTitle("Частотный анализ секторов");
@@ -365,9 +366,9 @@ QVector<QString> AnalyseData::Cells()
     int indexOfCell = 0,indexOfLAC = 0;
     for(int i=0;i<hideModel->columnCount();i++)
     {
-        if(hideModel->headerData(i,Qt::Horizontal).toString()=="firstCallingCellID")
+        if(hideModel->headerData(i,Qt::Horizontal).toString().toLower()=="firstcallingcellid" && indexOfCell ==0)
             indexOfCell = i;
-        if(hideModel->headerData(i,Qt::Horizontal).toString()=="firstCallingLAC")
+        if(hideModel->headerData(i,Qt::Horizontal).toString().toLower()=="firstcallinglac" && indexOfLAC == 0)
             indexOfLAC = i;
     }
 
@@ -375,6 +376,7 @@ QVector<QString> AnalyseData::Cells()
     {
         if(hideModel->data(hideModel->index(i,indexOfLAC)).toString()!="50331" && hideModel->data(hideModel->index(i,indexOfLAC)).toString()!="50333")
         {
+
             QString sec;
             QString tmpName = hideModel->data(hideModel->index(i,indexOfCell)).toString();
             tmpName.right(1)=='1'? sec = 'A' : tmpName.right(1)=='2'? sec='B':sec='C';
@@ -417,8 +419,12 @@ QVector<QString> AnalyseData::Cells()
                     break;
                 }
             }
-            if(!was) chastoti.push_back(QPair<QString,int>(cell,1));
+            if(!was)
+            {
+                chastoti.push_back(QPair<QString,int>(cell,1));
+            }
         }
+
     }
     return result;
 }
@@ -474,5 +480,3 @@ QTextBrowser* AnalyseData::getCompleteListCell()
         tb->setText(tb->toPlainText()+listCell[i]+"\n");
     return tb;
 }
-
-

@@ -70,7 +70,6 @@ void CallStat::on_pushButton_clicked()
     QApplication::setOverrideCursor(Qt::ArrowCursor);
 }
 
-
 QString CallStat::getQuery()
 {
     QString query = "select tag,callingPartyNumber,calledPartyNumber,dateForStartOfCharge,timeForStartOfCharge,chargeableDuration,"

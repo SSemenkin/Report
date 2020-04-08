@@ -36,7 +36,7 @@ void TextEdit::insertCompletion(const QString &completion)
     if (c->widget() != this)
         return;
     QTextCursor tc = textCursor();
-    int extra = completion.length() - c->completionPrefix().length();
+    int extra = completion.length() - c->completionPrefix().length(); // if you wanna add not existing part use tc.insertText(completion.right(extra));
     tc.movePosition(QTextCursor::Left);
     tc.movePosition(QTextCursor::EndOfWord);
     for(int i=0;i<c->completionPrefix().length();i++)
