@@ -535,9 +535,9 @@ padding-right:5px;</string>
         </layout>
        </item>
        <item row="1" column="2" colspan="2">
-        <widget class="QLabel" name="label_11">
+        <widget class="QLabel" name="connectionLabel">
          <property name="text">
-          <string>Текущее подключение :</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Текущее подключение :&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>

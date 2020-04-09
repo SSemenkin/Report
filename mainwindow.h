@@ -98,7 +98,7 @@ private slots:
 
     void saveSettings();
 
-    void on_driverCombo_currentIndexChanged(int index);
+    void on_driverCombo_currentIndexChanged(QString text);
 
     void openDatabaseEDR();
 

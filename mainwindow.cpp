@@ -182,6 +182,7 @@ void MainWindow::DbConnect()
         if(db.isOpen())
         {
             ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено");
+            ui->connectionLabel->setText("Текущее подключение: \n"+db.connectionName());
             if(ui->driverCombo->currentText() == "QPSQL")
             {
                 openDatabaseEDR();
@@ -191,7 +192,11 @@ void MainWindow::DbConnect()
                 dataBaseEDR.close();
             }
         }
-        else ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено");
+        else
+        {
+            ui->connectionLabel->setText("Текущее подключение: \nNone");
+            ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено");
+        }
 }
 
 void MainWindow::on_showData_clicked()
@@ -689,8 +694,15 @@ void MainWindow::on_connect_clicked()
     db.setPassword(ui->password->text());
     db.open();
     if(db.isOpen())
-    ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено");
-    else ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено");
+    {
+        ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено");
+        ui->connectionLabel->setText("Текущее подключение: \n"+db.connectionName());
+    }
+    else
+    {
+        ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено");
+        ui->connectionLabel->setText("Текущее подключение: \nNone");
+    }
     if(!fromCallStat)
     {
         if(db.isOpen())
