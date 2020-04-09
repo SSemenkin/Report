@@ -378,18 +378,6 @@
        <string>Подключение к БД</string>
       </property>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="2" column="2" colspan="2">
-        <widget class="QPushButton" name="connect">
-         <property name="styleSheet">
-          <string notr="true">padding:5px;
-padding-left:5px;
-padding-right:5px;</string>
-         </property>
-         <property name="text">
-          <string>Подключиться</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="2">
         <layout class="QGridLayout" name="gridLayout_7">
          <item row="2" column="0">
@@ -448,13 +436,42 @@ padding-right:5px;</string>
          </item>
         </layout>
        </item>
+       <item row="3" column="2" colspan="2">
+        <widget class="QPushButton" name="connect">
+         <property name="styleSheet">
+          <string notr="true">padding:5px;
+padding-left:5px;
+padding-right:5px;</string>
+         </property>
+         <property name="text">
+          <string>Подключиться</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2" colspan="2">
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item row="0" column="3">
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
           <widget class="QComboBox" name="driverCombo"/>
          </item>
          <item>
-          <widget class="QLineEdit" name="port"/>
+          <widget class="QLineEdit" name="port">
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -506,7 +523,7 @@ padding-right:5px;</string>
               <string/>
              </property>
              <property name="echoMode">
-              <enum>QLineEdit::Normal</enum>
+              <enum>QLineEdit::PasswordEchoOnEdit</enum>
              </property>
              <property name="clearButtonEnabled">
               <bool>true</bool>
@@ -518,17 +535,14 @@ padding-right:5px;</string>
         </layout>
        </item>
        <item row="1" column="2" colspan="2">
-        <spacer name="verticalSpacer_4">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Текущее подключение :</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
-        </spacer>
+        </widget>
        </item>
       </layout>
      </widget>
