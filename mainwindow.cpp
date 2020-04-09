@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     settings = new Settings();
+    edr_model = new QSqlQueryModel();
     onStart();
     DbConnect();
     AbonentSelected = false;
@@ -16,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     db.close();
+    delete edr_model;
     delete ui;
 }
 
@@ -47,7 +49,7 @@ QString MainWindow::getDatesToChart()
 
 void MainWindow::onStart()
 { 
-    ui->driverCombo->addItems({"QMYSQL","QPSQL"});
+    ui->driverCombo->addItems({"QPSQL","QMYSQL"});
     completer = new QCompleter(sql.split("\r\n"),this);
     //completer->setModel(modelFromFile("wordlist.txt"));
     //completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
@@ -98,8 +100,6 @@ void MainWindow::onStart()
     ui->pastePB->setFixedWidth(50);
 
     ui->showData->setShortcut(QKeySequence(tr("Ctrl+L")));
-
-
     ui->pastePB->setIcon(QIcon(":/images/xCopy.png"));
     ui->pushButton_2->setIcon(QIcon(":/images/execute.png"));
     ui->pushButton_3->setIcon(QIcon(":/images/clear-symbol.png"));
@@ -123,7 +123,7 @@ void MainWindow::onStart()
     ui->pushButton_5->setToolTip("Отобразить даты, присутствующие в БД");
     on_radioButton_2_clicked();
     requestBegin = "select tag,callingPartyNumber,calledPartyNumber,dateForStartOfCharge,timeForStartOfCharge,chargeableDuration,"
-                   "callingSubscriberIMSI,callingSubscriberIMEI,firstCallingLAC,firstCallingCellID,lastCallingLAC,lastCallingCellID from cdr";
+                   "callingSubscriberIMSI,callingSubscriberIMEI,firstCallingLAC,firstCallingCellID,lastCallingLAC,lastCallingCellID from mss";
 
     if(!QDir("results").exists()) QDir().mkdir("results");
     if(!QDir("results\\MN").exists()) QDir().mkdir("results\\MN");
@@ -134,7 +134,7 @@ void MainWindow::onStart()
     if(!QDir("results\\IMEI").exists()) QDir().mkdir("results\\IMEI");
 
 
-    ui->password->setEchoMode(QLineEdit::Password);
+
     ui->comboBox->addItem("Россия");
     ui->comboBox->addItem("Украина");
     ui->comboBox->addItem("Международные (кроме России и Украины)");
@@ -147,7 +147,7 @@ void MainWindow::onStart()
     IMEI->setValidator(new QRegExpValidator(QRegExp("[0-9]{15}")));
     abonentLine->setValidator(new QRegExpValidator(QRegExp("[0-9]{15}")));
 
-    request_MN = requestBegin + "from cdr WHERE calledPartyNumber not like '380%"
+    request_MN = requestBegin + " WHERE calledPartyNumber not like '380%"
                  "' and tag = '1' and calledPartyNumber not like '7%' and calledPartyNumber "
                  "not like '72%' and calledPartyNumber not like '072%' and calledPartyNumber not like '071%' "
                  "and calledPartyNumber not like '71%' and calledPartyNumber  <> 101 and calledPartyNumber  <> 102 "
@@ -178,8 +178,19 @@ void MainWindow::DbConnect()
         db.setUserName(ui->login->text());
         db.setPassword(ui->password->text());
         db.open();
+
         if(db.isOpen())
-        ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено");
+        {
+            ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено");
+            if(ui->driverCombo->currentText() == "QPSQL")
+            {
+                openDatabaseEDR();
+            }
+            else
+            {
+                dataBaseEDR.close();
+            }
+        }
         else ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено");
 }
 
@@ -391,7 +402,7 @@ void MainWindow::on_showData_clicked()
 
         QString request;
         abonentLine->text().isEmpty() ? request = requestBegin + " where tag='1' " +DateB()+";"
-                : request = requestBegin + "from cdr where tag='1' and (callingPartyNumber = '"+abonentLine->text()+"' or callingPartyNumber ='0"+abonentLine->text()+"' or callingPartyNumber ='380"+abonentLine->text()+"' )" + DateB()+";";
+                : request = requestBegin + " where tag='1' and (callingPartyNumber = '"+abonentLine->text()+"' or callingPartyNumber ='0"+abonentLine->text()+"' or callingPartyNumber ='380"+abonentLine->text()+"' )" + DateB()+";";
 
         model->setQuery(request,db);
         SetModel(request);
@@ -419,7 +430,7 @@ void MainWindow::on_showData_clicked()
         QString request;
 
          abonentLine->text().isEmpty()?  request = requestBegin + " where tag='1' " +DateB()+";"
-                 :request = requestBegin + "from cdr where tag='1' and (calledPartyNumber = '380"+abonentLine->text()+
+                 :request = requestBegin + " where tag='1' and (calledPartyNumber = '380"+abonentLine->text()+
                  "' or calledPartyNumber ='"+abonentLine->text()+"' or calledPartyNumber = '0"+abonentLine->text()+"') " + DateB()+";";
         model->setQuery(request,db);
 
@@ -689,12 +700,10 @@ void MainWindow::on_connect_clicked()
             if(ui->driverCombo->currentText() == "QPSQL")
             {
                 openDatabaseEDR();
-                edr_model = new QSqlQueryModel;
             }
             else
             {
                 dataBaseEDR.close();
-                delete edr_model;
             }
             return;
         }
@@ -871,7 +880,7 @@ void MainWindow::on_pushButton_5_clicked()
     if(db.isOpen())
     {
         QString request = "select distinct dateForStartOfCharge from cdr";
-        ui->driverCombo->currentIndex() == 0 ? request.replace("mss","cdr") : request.replace("cdr","mss");
+        ui->driverCombo->currentText()== "QMYSQL" ? request.replace("mss","cdr") : request.replace("cdr","mss");
         model->setQuery(request,db);
         ui->tableView->setModel(model);
         ui->tableView->resizeColumnsToContents();
@@ -987,7 +996,7 @@ void MainWindow::abonentAnalyse(int analyseColumn)
 
 void MainWindow::saveSettings()
 {
-    if(ui->driverCombo->currentIndex() == 0)
+    if(ui->driverCombo->currentText() == "QMYSQL")
     {
         settings->saveAuthData("mainForm/mySqlHost",ui->host->text());
         settings->saveAuthData("mainForm/mySqlPort",ui->port->text());
@@ -995,7 +1004,7 @@ void MainWindow::saveSettings()
         settings->saveAuthData("mainForm/mySqlUserName",ui->login->text());
         settings->saveAuthData("mainForm/mySqlPassword",ui->password->text());
     }
-    else if( ui->driverCombo->currentIndex() == 1)
+    else if( ui->driverCombo->currentText() == "QPSQL")
     {
         settings->saveAuthData("mainForm/postgresHost",ui->host->text());
         settings->saveAuthData("mainForm/postgresPort",ui->port->text());
@@ -1029,10 +1038,10 @@ QAbstractItemModel *MainWindow::modelFromFile(const QString& fileName)
     return new QStringListModel(words, completer);
 }
 
-void MainWindow::on_driverCombo_currentIndexChanged(int index)
+void MainWindow::on_driverCombo_currentIndexChanged(QString text)
 {
 
-    if(index == 0)
+    if(text == "QMYSQL")
     {
         ui->host->setText(settings->getSettigns("mainForm/mySqlHost"));
         ui->port->setText(settings->getSettigns("mainForm/mySqlPort"));
@@ -1040,9 +1049,9 @@ void MainWindow::on_driverCombo_currentIndexChanged(int index)
         ui->login->setText(settings->getSettigns("mainForm/mySqlUserName"));
         ui->password->setText(settings->getSettigns("mainForm/mySqlPassword"));
         requestBegin.replace("from mss","from cdr");
-        request_MN.replace("from cdr","from mss");
+        request_MN.replace("from mss","from cdr");
     }
-    else if (index == 1)
+    else if (text == "QPSQL")
     {
         ui->host->setText(settings->getSettigns("mainForm/postgresHost"));
         ui->port->setText(settings->getSettigns("mainForm/postgresPort"));
@@ -1050,7 +1059,7 @@ void MainWindow::on_driverCombo_currentIndexChanged(int index)
         ui->login->setText(settings->getSettigns("mainForm/postgresUserName"));
         ui->password->setText(settings->getSettigns("mainForm/postgresPassword"));
         requestBegin.replace("from cdr","from mss");
-        request_MN.replace("from mss","from cdr");
+        request_MN.replace("from cdr","from mss");
 
     }
 }
