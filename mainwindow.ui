@@ -664,7 +664,7 @@ padding-right:5px;</string>
        <item row="0" column="0">
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tab">
           <attribute name="title">
@@ -842,36 +842,43 @@ padding-right:5px;</string>
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>pastePB</tabstop>
-  <tabstop>outgoing</tabstop>
-  <tabstop>incoming</tabstop>
-  <tabstop>all_calls</tabstop>
-  <tabstop>radioButton</tabstop>
-  <tabstop>radioButton_5</tabstop>
-  <tabstop>comboBox</tabstop>
-  <tabstop>radioButton_4</tabstop>
-  <tabstop>oneDay</tabstop>
-  <tabstop>dateEdit_2</tabstop>
-  <tabstop>period</tabstop>
-  <tabstop>dateEdit</tabstop>
-  <tabstop>radioButton_2</tabstop>
-  <tabstop>columnOrder</tabstop>
-  <tabstop>asc</tabstop>
-  <tabstop>desc</tabstop>
-  <tabstop>pushButton_5</tabstop>
-  <tabstop>cellStat</tabstop>
-  <tabstop>pushButton_6</tabstop>
-  <tabstop>showData</tabstop>
-  <tabstop>saveToFile</tabstop>
+  <tabstop>driverCombo</tabstop>
+  <tabstop>port</tabstop>
   <tabstop>host</tabstop>
   <tabstop>DBname</tabstop>
   <tabstop>login</tabstop>
   <tabstop>password</tabstop>
   <tabstop>connect</tabstop>
-  <tabstop>query</tabstop>
+  <tabstop>pastePB</tabstop>
+  <tabstop>outgoing</tabstop>
+  <tabstop>incoming</tabstop>
+  <tabstop>all_calls</tabstop>
+  <tabstop>pushButton_5</tabstop>
+  <tabstop>comboBox</tabstop>
+  <tabstop>radioButton</tabstop>
+  <tabstop>radioButton_5</tabstop>
+  <tabstop>radioButton_4</tabstop>
+  <tabstop>oneDay</tabstop>
+  <tabstop>period</tabstop>
+  <tabstop>radioButton_2</tabstop>
+  <tabstop>dateEdit_2</tabstop>
+  <tabstop>dateEdit</tabstop>
+  <tabstop>cellStat</tabstop>
+  <tabstop>columnOrder</tabstop>
+  <tabstop>asc</tabstop>
+  <tabstop>desc</tabstop>
+  <tabstop>chBoxEnableOrder</tabstop>
+  <tabstop>pushButton_6</tabstop>
+  <tabstop>showData</tabstop>
+  <tabstop>saveToFile</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>tableView</tabstop>
   <tabstop>pushButton</tabstop>
   <tabstop>pushButton_3</tabstop>
   <tabstop>pushButton_2</tabstop>
+  <tabstop>query</tabstop>
+  <tabstop>tableViewQuery</tabstop>
+  <tabstop>tableViewEDR</tabstop>
  </tabstops>
  <resources/>
  <connections/>
