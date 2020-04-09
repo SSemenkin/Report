@@ -18,6 +18,7 @@ CallStat::~CallStat()
 
 void CallStat::onStart()
 {
+    settings  = new Settings();
     ui->over->setDateTime(QDateTime::currentDateTime());
     ui->begin->setDateTime(QDateTime::currentDateTime());
 
@@ -32,13 +33,29 @@ void CallStat::onStart()
 void CallStat::on_pushButton_clicked()
 {
     QSqlDatabase::contains("second") ? dataBase = QSqlDatabase::database("second"):
-            dataBase = QSqlDatabase::addDatabase("QMYSQL","second");
-    dataBase.setPort(dataBasePort);
-    dataBase.setHostName(dataBaseHost);
-    dataBase.setDatabaseName(dataBaseName);
-    dataBase.setUserName(dataBaseUser);
-    dataBase.setPassword(dataBasePassword);
+            dataBase = QSqlDatabase::addDatabase(driver,"second");
+    if(driver == "QMYSQL")
+    {
+        dataBase.setPort(settings->getSettigns("mainForm/mySqlPort").toInt());
+        dataBase.setHostName(settings->getSettigns("mainForm/mySqlHost"));
+        dataBase.setDatabaseName(settings->getSettigns("mainForm/mySqlDatabaseName"));
+        dataBase.setUserName(settings->getSettigns("mainForm/mySqlUserName"));
+        dataBase.setPassword(settings->getSettigns("mainForm/mySqlPassword"));
+    }
+    else if (driver == "QPSQL")
+    {
+        dataBase.setPort(settings->getSettigns("mainForm/postgresPort").toInt());
+        dataBase.setHostName(settings->getSettigns("mainForm/postgresHost"));
+        dataBase.setDatabaseName(settings->getSettigns("mainForm/postgresDatabaseName"));
+        dataBase.setUserName(settings->getSettigns("mainForm/postgresUserName"));
+        dataBase.setPassword(settings->getSettigns("mainForm/postgresPassword"));
+    }
     dataBase.open();
+    if(!dataBase.isOpen())
+    {
+        QMessageBox::information(this,"Database not open",dataBase.lastError().text());
+        return;
+    }
 
 
     if(ui->cell->text().isEmpty())
@@ -110,4 +127,9 @@ QString CallStat::getQuery()
     }
     qDebug () << query;
     return query;
+}
+
+void CallStat::setDriver(QString text)
+{
+    driver = text;
 }

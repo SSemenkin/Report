@@ -41,7 +41,6 @@ void AnalyseData::GenerateChart(QVector<QVector<int>> loadCell
 
     if(chastoti.size()!=0)
     {
-        qDebug() << chastoti;
         QChart *pieChart = new QChart;
         pieChart->legend()->setAlignment(Qt::AlignRight);
         pieChart->setTitle("Частотный анализ секторов");
@@ -312,15 +311,7 @@ QVector<QColor> AnalyseData::getPalitra()
 
 bool AnalyseData::openLocalDataBase()
 {
-    QSqlDatabase::contains("chart_connection") ? dataBase = QSqlDatabase::database("chart_connection"):
-            dataBase = QSqlDatabase::addDatabase("QMYSQL","chart_connection");
-    dataBase.setPort(dataBasePort);
-    dataBase.setHostName(dataBaseHost);
-    dataBase.setDatabaseName(dataBaseName);
-    dataBase.setUserName(dataBaseUser);
-    dataBase.setPassword(dataBasePassword);
-    dataBase.open();
-    return dataBase.isOpen();
+   return true;
 }
 
 void AnalyseData::updateWindowWidgets()

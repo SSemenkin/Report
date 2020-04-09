@@ -40,6 +40,16 @@ QString Settings::getIP() const
     return IP;
 }
 
+QString Settings::getSettigns(QString key) const
+{
+    return settings->value(key,"").toString();
+}
+
+void Settings::saveAuthData(QString key, QString value) const
+{
+    settings->setValue(key,value);
+}
+
 void Settings::saveSettings()
 {
     if(ui->IP->text().isEmpty())

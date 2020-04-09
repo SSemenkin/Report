@@ -8,6 +8,7 @@
 #include <QTableView>
 
 
+#include "settings.h"
 
 namespace Ui {
 class CallStat;
@@ -25,6 +26,8 @@ public:
 
     QString getQuery();
 
+    void setDriver(QString);
+
 private slots:
     void on_pushButton_clicked();
 
@@ -34,12 +37,10 @@ private:
 
     QSqlDatabase dataBase;
 
-    QString dataBaseName = "cdrmss1lug",
-            dataBaseHost = "193.228.160.5",
-            dataBaseUser = "ebondarenko",
-            dataBasePassword ="sQtgkuUTP9j8m0XF";
 
-    const int dataBasePort = 3306;
+    QString driver;
+
+    Settings *settings;
 
 };
 

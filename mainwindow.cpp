@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    settings = new Settings();
     onStart();
     DbConnect();
     AbonentSelected = false;
@@ -104,7 +105,7 @@ void MainWindow::onStart()
     ui->pushButton_3->setIcon(QIcon(":/images/clear-symbol.png"));
     ui->showData->setIcon(QIcon(":/images/show.png"));
     ui->pushButton->setIcon(QIcon(":/images/save.png"));
-    ui->pushButton_4->setIcon(QIcon(":/images/connect.png"));
+    ui->connect->setIcon(QIcon(":/images/connect.png"));
     ui->pushButton_6->setIcon(QIcon(":/images/cahrt.png"));
     ui->pushButton_5->setIcon(QIcon(":/images/help.png"));
     ui->asc->setIcon(QIcon(":/images/asc.png"));
@@ -203,7 +204,15 @@ void MainWindow::on_showData_clicked()
         ui->pushButton_6->setVisible(false);
         AbonentSelected = false;
     }
-
+    if(dataBaseEDR.isOpen())
+    {
+        QString request = "select datecharge,eventidentity,result,radiotype,typerau,intrarautype"
+                          ",gsmcause,discreason,rai,cellidorsai,sac,msisdn,imsi,ptmsi,hlrnumber,sizeapn,apn,oldrai,negotiatedqos  from edr where msisdn = '380"+abonentLine->text()+"'";
+        edr_model->setQuery(request,dataBaseEDR);
+        ui->tableViewEDR->setModel(edr_model);
+        ui->tableViewEDR->resizeRowsToContents();
+        ui->tableViewEDR->resizeColumnsToContents();
+    }
 
     ui->statusBar->showMessage("");
     if(ui->radioButton_5->isChecked() && ui->comboBox->currentIndex()==0)
@@ -651,12 +660,14 @@ void MainWindow::SetModel(QString request)
     ui->tableView->setModel(model);
     ui->label_7->setText("Строк(Вызовов): "+QString::number(model->rowCount()));
     ui->tableView->resizeColumnsToContents();
+    ui->tableViewEDR->resizeRowsToContents();
+    ui->tableViewEDR->resizeColumnsToContents();
     QApplication::setOverrideCursor(Qt::ArrowCursor);
     ui->query->setText(request);
     GetTime();
 }
 
-void MainWindow::on_pushButton_4_clicked()
+void MainWindow::on_connect_clicked()
 {
     QSqlDatabase::contains(ui->driverCombo->currentText()+"first_connection") ? db = QSqlDatabase::database(ui->driverCombo->currentText()+"first_connection") :
             db = QSqlDatabase::addDatabase(ui->driverCombo->currentText(),ui->driverCombo->currentText()+"first_connection");
@@ -673,7 +684,18 @@ void MainWindow::on_pushButton_4_clicked()
     {
         if(db.isOpen())
         {
+            saveSettings();
             QMessageBox::information(this,"Success","database is open/connection established");
+            if(ui->driverCombo->currentText() == "QPSQL")
+            {
+                openDatabaseEDR();
+                edr_model = new QSqlQueryModel;
+            }
+            else
+            {
+                dataBaseEDR.close();
+                delete edr_model;
+            }
             return;
         }
         else
@@ -849,6 +871,7 @@ void MainWindow::on_pushButton_5_clicked()
     if(db.isOpen())
     {
         QString request = "select distinct dateForStartOfCharge from cdr";
+        ui->driverCombo->currentIndex() == 0 ? request.replace("mss","cdr") : request.replace("cdr","mss");
         model->setQuery(request,db);
         ui->tableView->setModel(model);
         ui->tableView->resizeColumnsToContents();
@@ -893,9 +916,10 @@ void MainWindow::onTableCopy(QModelIndex index)
 void MainWindow::on_cellStat_clicked()
 {
     CallStat a;
+    a.setDriver(ui->driverCombo->currentText());
     a.exec();
     fromCallStat = true;
-    on_pushButton_4_clicked();
+
 }
 
 void MainWindow::abonentAnalyse(int analyseColumn)
@@ -961,6 +985,26 @@ void MainWindow::abonentAnalyse(int analyseColumn)
     ui->duration->setText("Длительность разговоров\nв среднем составляет: "+QString::number(temporarySum)+" секунд");
 }
 
+void MainWindow::saveSettings()
+{
+    if(ui->driverCombo->currentIndex() == 0)
+    {
+        settings->saveAuthData("mainForm/mySqlHost",ui->host->text());
+        settings->saveAuthData("mainForm/mySqlPort",ui->port->text());
+        settings->saveAuthData("mainForm/mySqlDatabaseName",ui->DBname->text());
+        settings->saveAuthData("mainForm/mySqlUserName",ui->login->text());
+        settings->saveAuthData("mainForm/mySqlPassword",ui->password->text());
+    }
+    else if( ui->driverCombo->currentIndex() == 1)
+    {
+        settings->saveAuthData("mainForm/postgresHost",ui->host->text());
+        settings->saveAuthData("mainForm/postgresPort",ui->port->text());
+        settings->saveAuthData("mainForm/postgresDatabaseName",ui->DBname->text());
+        settings->saveAuthData("mainForm/postgresUserName",ui->login->text());
+        settings->saveAuthData("mainForm/postgresPassword",ui->password->text());
+    }
+}
+
 QAbstractItemModel *MainWindow::modelFromFile(const QString& fileName)
 {
     QFile file(fileName);
@@ -987,24 +1031,38 @@ QAbstractItemModel *MainWindow::modelFromFile(const QString& fileName)
 
 void MainWindow::on_driverCombo_currentIndexChanged(int index)
 {
-    ui->host->setText("193.228.160.5");
+
     if(index == 0)
     {
-        ui->port->setText("3306");
-        ui->DBname->setText("cdrmss1lug");
-        ui->login->setText("ebondarenko");
-        ui->password->setText("sQtgkuUTP9j8m0XF");
+        ui->host->setText(settings->getSettigns("mainForm/mySqlHost"));
+        ui->port->setText(settings->getSettigns("mainForm/mySqlPort"));
+        ui->DBname->setText(settings->getSettigns("mainForm/mySqlDatabaseName"));
+        ui->login->setText(settings->getSettigns("mainForm/mySqlUserName"));
+        ui->password->setText(settings->getSettigns("mainForm/mySqlPassword"));
         requestBegin.replace("from mss","from cdr");
         request_MN.replace("from cdr","from mss");
     }
-    else
+    else if (index == 1)
     {
-        ui->port->setText("5432");
-        ui->DBname->setText("cdr");
-        ui->login->setText("smena");
-        ui->password->setText("postgres20094");
+        ui->host->setText(settings->getSettigns("mainForm/postgresHost"));
+        ui->port->setText(settings->getSettigns("mainForm/postgresPort"));
+        ui->DBname->setText(settings->getSettigns("mainForm/postgresDatabaseName"));
+        ui->login->setText(settings->getSettigns("mainForm/postgresUserName"));
+        ui->password->setText(settings->getSettigns("mainForm/postgresPassword"));
         requestBegin.replace("from cdr","from mss");
         request_MN.replace("from mss","from cdr");
 
     }
+}
+
+void MainWindow::openDatabaseEDR()
+{
+    QSqlDatabase::contains("EDR_connection") ? dataBaseEDR = QSqlDatabase::database("EDR_connection") :
+            dataBaseEDR  = QSqlDatabase::addDatabase("QPSQL","EDR_connection");
+    dataBaseEDR.setPort(settings->getSettigns("mainForm/postgresPort").toInt());
+    dataBaseEDR.setHostName(settings->getSettigns("mainForm/postgresHost"));
+    dataBaseEDR.setDatabaseName("edr");
+    dataBaseEDR.setUserName(settings->getSettigns("mainForm/postgresUserName"));
+    dataBaseEDR.setPassword(settings->getSettigns("mainForm/postgresPassword"));
+    dataBaseEDR.open();
 }

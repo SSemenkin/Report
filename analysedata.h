@@ -84,12 +84,7 @@ private:
 
     QSqlDatabase dataBase;
 
-    QString dataBaseName = "cdrmss1lug",
-            dataBaseHost = "193.228.160.5",
-            dataBaseUser = "ebondarenko",
-            dataBasePassword ="sQtgkuUTP9j8m0XF";
 
-    const int dataBasePort = 3306;
 
 };
 
