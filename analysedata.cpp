@@ -49,9 +49,8 @@ void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
 
 
         CustomSlice *slice;
-        int value = chastoti.size();
-        if(chastoti.size()>20) value  = 20;
-        for(int i=0;i<value;i++)
+
+        for(int i=0;i<chastoti.size() && i < 20;i++)
         {
             slice = new CustomSlice(chastoti[i].first,chastoti[i].second);
             slice->setLabelFont(font);
@@ -113,12 +112,13 @@ void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
         axisYi->setTickCount(6);
         icmChart->addAxis(axisYi, Qt::AlignLeft);
 
-        for(int i=0;i<cells2G.size();i++)
+        for(int i=0;i<cells2G.size() && i < 15;i++)
         {
              QLineSeries *tmpSeries = new QLineSeries();
              tmpSeries->setName(cells2G[i].cellName);
              QLineSeries *tmpSeriesi = new QLineSeries();
              tmpSeriesi->setName(cells2G[i].cellName);
+
              for(int j=0;j<cells2G[i].dates.size();j++)
              {
                  tmpSeries->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].charges[j]);
@@ -221,7 +221,7 @@ QVector<cell2G> AnalyseData::getChargeOf2GCellsFromMySQL(QVector<QString> cells)
     {
         QSqlQueryModel *chargeModel = new QSqlQueryModel;
         QString query;
-        for(int i=0;i<cells.size();i++)
+        for(int i=0;i<cells.size() && i < 15;i++)
         {
             query = "select TCH,SPEECH,GPRS,TIME,INTERFERENCE from bscrecords where RBS='"+cells[i].left(6)+"' and CELLNAME = '"+cells[i].right(1)+"' and TIME between '"+QDateTime::currentDateTime().addDays(-1).toString(Qt::ISODate)
                     +"' and '"+QDateTime::currentDateTime().toString(Qt::ISODate)+"'";
@@ -242,6 +242,8 @@ QVector<cell2G> AnalyseData::getChargeOf2GCellsFromMySQL(QVector<QString> cells)
 
     return result;
 }
+
+
 
 void AnalyseData::xCopy(bool b)
 {

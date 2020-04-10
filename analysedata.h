@@ -70,6 +70,7 @@ private slots:
 
     QVector<cell2G> getChargeOf2GCellsFromMySQL(QVector<QString>);
 
+
 private:
 
     QSqlQueryModel *hideModel;
@@ -87,6 +88,8 @@ private:
     QSqlDatabase mysqldataBase;
 
     Settings *settings;
+
+    QBrush m_originalBrush;
 
 
 };

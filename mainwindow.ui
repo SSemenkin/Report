@@ -188,6 +188,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="pushButton_6">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="text">
               <string>Анализ данных CDR</string>
              </property>
@@ -677,6 +680,12 @@ padding-right:5px;</string>
       <layout class="QGridLayout" name="gridLayout_11">
        <item row="0" column="0">
         <widget class="QTabWidget" name="tabWidget">
+         <property name="maximumSize">
+          <size>
+           <width>4000</width>
+           <height>2000</height>
+          </size>
+         </property>
          <property name="currentIndex">
           <number>0</number>
          </property>

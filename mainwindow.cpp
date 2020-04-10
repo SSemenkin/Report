@@ -87,7 +87,6 @@ void MainWindow::onStart()
 
 
 
-    ui->pushButton_6->setVisible(false);
     ui->groupBox->setFixedWidth(290);
     ui->groupBox_2->setFixedWidth(650);
     ui->groupBox_6->setFixedWidth(300);
@@ -221,11 +220,11 @@ void MainWindow::on_showData_clicked()
     if(ui->radioButton->isChecked() && ui->outgoing->isChecked())
     {
         AbonentSelected = true;
-        ui->pushButton_6->setVisible(true);
+        ui->pushButton_6->setEnabled(true);
     }
     else
     {
-        ui->pushButton_6->setVisible(false);
+        ui->pushButton_6->setEnabled(false);
         AbonentSelected = false;
     }
     if(dataBaseEDR.isOpen() && ui->radioButton->isChecked())
@@ -611,7 +610,7 @@ void MainWindow::on_pushButton_3_clicked()
 void MainWindow::on_pushButton_2_clicked()
 {
     ui->tabWidget->setCurrentWidget(ui->tab_2);
-    ui->pushButton_6->setVisible(0);
+    ui->pushButton_6->setEnabled(0);
     AbonentSelected = false;
     if(!db.isOpen())
     {
@@ -885,7 +884,6 @@ void MainWindow::on_radioButton_2_clicked()
     ui->dateEdit->setVisible(false);
     ui->dateEdit_2->setVisible(false);
 
-
     ui->radioButton_2->setChecked(true);
     ui->oneDay->setChecked(false);
     ui->period->setChecked(false);
@@ -903,6 +901,7 @@ void MainWindow::on_pushButton_5_clicked()
         ui->tableView->resizeColumnsToContents();
         ui->tableView->resizeRowsToContents();
         ui->tabWidget->setCurrentIndex(0);
+        ui->pushButton_6->setEnabled(false);
     }
     else QMessageBox::critical(this,"Ошибка подключения","Откройте БД/Подключитесь к ней");
 
