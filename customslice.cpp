@@ -55,8 +55,10 @@ CustomSlice::CustomSlice(QString label, qreal value)
 
     socket = new QTcpSocket;
     connect(this, &CustomSlice::hovered, this, &CustomSlice::showHighlight);
-    connect(this,&CustomSlice::pressed,this,&CustomSlice::getData);
+    //connect(this,&CustomSlice::pressed,this,&CustomSlice::getData);
+    connect(this,&CustomSlice::clicked,this,&CustomSlice::getLoadData);
     connect(socket,&QTcpSocket::readyRead,this,&CustomSlice::readData);
+    connect(this,&CustomSlice::doubleClicked,this,&CustomSlice::getData);
 
 }
 
@@ -111,6 +113,11 @@ void CustomSlice::getData()
     is_tg = false;
     socket->connectToHost(IP,23);
 
+}
+
+void CustomSlice::getLoadData()
+{
+    emit sliceClicked(label());
 }
 
 void CustomSlice::readData() //Telnet Connection

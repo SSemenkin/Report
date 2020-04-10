@@ -70,6 +70,8 @@ private slots:
 
     QVector<cell2G> getChargeOf2GCellsFromMySQL(QVector<QString>);
 
+    void ShowLoad(QString cell);
+
 
 private:
 
@@ -90,6 +92,8 @@ private:
     Settings *settings;
 
     QBrush m_originalBrush;
+
+    QVector<QLineSeries*> loadSeriesV;
 
 
 };

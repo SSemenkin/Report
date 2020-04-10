@@ -53,6 +53,7 @@ void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
         for(int i=0;i<chastoti.size() && i < 20;i++)
         {
             slice = new CustomSlice(chastoti[i].first,chastoti[i].second);
+            connect(slice,&CustomSlice::sliceClicked,this,&AnalyseData::ShowLoad);
             slice->setLabelFont(font);
             *pieSeries << slice;
 
@@ -112,15 +113,17 @@ void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
         axisYi->setTickCount(6);
         icmChart->addAxis(axisYi, Qt::AlignLeft);
 
-        for(int i=0;i<cells2G.size() && i < 15;i++)
+        for(int i=0;i<cells2G.size();i++)
         {
              QLineSeries *tmpSeries = new QLineSeries();
              tmpSeries->setName(cells2G[i].cellName);
              QLineSeries *tmpSeriesi = new QLineSeries();
              tmpSeriesi->setName(cells2G[i].cellName);
-
+             tmpSeries->setOpacity(0);
+             loadSeriesV.push_back(tmpSeries);
              for(int j=0;j<cells2G[i].dates.size();j++)
              {
+
                  tmpSeries->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].charges[j]);
                  tmpSeriesi->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].inter[j]);
              }
@@ -221,7 +224,7 @@ QVector<cell2G> AnalyseData::getChargeOf2GCellsFromMySQL(QVector<QString> cells)
     {
         QSqlQueryModel *chargeModel = new QSqlQueryModel;
         QString query;
-        for(int i=0;i<cells.size() && i < 15;i++)
+        for(int i=0;i<cells.size();i++)
         {
             query = "select TCH,SPEECH,GPRS,TIME,INTERFERENCE from bscrecords where RBS='"+cells[i].left(6)+"' and CELLNAME = '"+cells[i].right(1)+"' and TIME between '"+QDateTime::currentDateTime().addDays(-1).toString(Qt::ISODate)
                     +"' and '"+QDateTime::currentDateTime().toString(Qt::ISODate)+"'";
@@ -243,6 +246,16 @@ QVector<cell2G> AnalyseData::getChargeOf2GCellsFromMySQL(QVector<QString> cells)
     return result;
 }
 
+void AnalyseData::ShowLoad(QString cell)
+{
+     for(int i=0;i<loadSeriesV.size();i++)
+     {
+         if(cell == loadSeriesV[i]->name() && cell[0]=='L')
+             loadSeriesV[i]->setOpacity(1);
+         else
+             loadSeriesV[i]->setOpacity(0);
+     }
+}
 
 
 void AnalyseData::xCopy(bool b)

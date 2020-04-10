@@ -65,6 +65,12 @@ public Q_SLOTS:
 
     void getData();
 
+    void getLoadData();
+
+signals:
+
+    void sliceClicked(QString);
+
 private:
 
     bool is_tg = false;
