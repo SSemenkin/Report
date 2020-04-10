@@ -187,12 +187,30 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton_6">
+            <widget class="QPushButton" name="analyseDataButton">
              <property name="enabled">
               <bool>false</bool>
              </property>
+             <property name="tabletTracking">
+              <bool>false</bool>
+             </property>
+             <property name="toolTip">
+              <string>При нажатии правой кнопкой мыши возможны варианты</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
              <property name="text">
               <string>Анализ данных CDR</string>
+             </property>
+             <property name="autoDefault">
+              <bool>false</bool>
+             </property>
+             <property name="default">
+              <bool>false</bool>
+             </property>
+             <property name="flat">
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -891,7 +909,7 @@ padding-right:5px;</string>
   <tabstop>asc</tabstop>
   <tabstop>desc</tabstop>
   <tabstop>chBoxEnableOrder</tabstop>
-  <tabstop>pushButton_6</tabstop>
+  <tabstop>analyseDataButton</tabstop>
   <tabstop>showData</tabstop>
   <tabstop>saveToFile</tabstop>
   <tabstop>tabWidget</tabstop>

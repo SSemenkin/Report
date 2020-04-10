@@ -86,7 +86,7 @@ private slots:
 
     void on_pushButton_5_clicked();
 
-    void on_pushButton_6_clicked();
+    void on_analyseDataButton_clicked();
 
     void on_pastePB_clicked();
 
@@ -101,6 +101,10 @@ private slots:
     void on_driverCombo_currentIndexChanged(QString text);
 
     void openDatabaseEDR();
+
+    void on_analyseDataButton_customContextMenuRequested(const QPoint &pos);
+
+    void customMenuActionTriggered();
 
 private:
 
@@ -133,7 +137,11 @@ private:
 
     Settings *settings;
 
-     QSqlQueryModel *edr_model;
+    QSqlQueryModel *edr_model;
+
+    QString toOneString(QStringList list,QString separator = "\n");
+
+    QAction *actionSimple,*actionDay,*actionWeek;
 
 };
 

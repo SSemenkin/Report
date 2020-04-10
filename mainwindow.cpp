@@ -9,6 +9,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
     settings = new Settings();
     edr_model = new QSqlQueryModel();
+    ui->analyseDataButton->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    actionDay = new QAction(QIcon(":/images/day.png"),"Частотный анализ + Загрузка последние сутки",this);
+    actionSimple = new QAction(QIcon(":/images/PieChart.png"),"Частотный анализ",this);
+    actionWeek = new QAction(QIcon(":/images/week.png"),"Частотный анализ + Загрузка последняя неделя",this);
+
+
+    connect(actionDay,&QAction::triggered,this,&MainWindow::customMenuActionTriggered);
+    connect(actionSimple,&QAction::triggered,this,&MainWindow::customMenuActionTriggered);
+    connect(actionWeek,&QAction::triggered,this,&MainWindow::customMenuActionTriggered);
+
     onStart();
     DbConnect();
     AbonentSelected = false;
@@ -100,7 +111,7 @@ void MainWindow::onStart()
 
     ui->showData->setFixedWidth(170);
     ui->cellStat->setFixedWidth(170);
-    ui->pushButton_6->setFixedWidth(170);
+    ui->analyseDataButton->setFixedWidth(170);
     ui->saveToFile->setFixedWidth(170);
     abonentLine->setFixedWidth(250);
     ui->pastePB->setFixedWidth(50);
@@ -112,7 +123,7 @@ void MainWindow::onStart()
     ui->showData->setIcon(QIcon(":/images/show.png"));
     ui->pushButton->setIcon(QIcon(":/images/save.png"));
     ui->connect->setIcon(QIcon(":/images/connect.png"));
-    ui->pushButton_6->setIcon(QIcon(":/images/cahrt.png"));
+    ui->analyseDataButton->setIcon(QIcon(":/images/cahrt.png"));
     ui->pushButton_5->setIcon(QIcon(":/images/help.png"));
     ui->asc->setIcon(QIcon(":/images/asc.png"));
     ui->desc->setIcon(QIcon(":/images/desc.png"));
@@ -177,31 +188,36 @@ void MainWindow::onStart()
 void MainWindow::DbConnect()
 {
 
-        db = QSqlDatabase::addDatabase(ui->driverCombo->currentText(),ui->driverCombo->currentText()+"first_connection");
-        db.setHostName(ui->host->text());
-        db.setPort(ui->port->text().toInt());
-        db.setDatabaseName(ui->DBname->text());
-        db.setUserName(ui->login->text());
-        db.setPassword(ui->password->text());
-        db.open();
-
-        if(db.isOpen())
+        if(!ui->host->text().isEmpty())
         {
-            ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено",5000);
-            ui->connectionLabel->setText("Текущее подключение: \n"+db.connectionName());
-            if(ui->driverCombo->currentText() == "QPSQL")
+            db = QSqlDatabase::addDatabase(ui->driverCombo->currentText(),ui->driverCombo->currentText()+"first_connection");
+            db.setHostName(ui->host->text());
+            db.setPort(ui->port->text().toInt());
+            db.setDatabaseName(ui->DBname->text());
+            db.setUserName(ui->login->text());
+            db.setPassword(ui->password->text());
+            db.open();
+
+            if(db.isOpen())
             {
-                openDatabaseEDR();
+
+                if(ui->driverCombo->currentText() == "QPSQL")
+                {
+                    openDatabaseEDR();
+                }
+                else
+                {
+                    dataBaseEDR.close();
+                }
+                ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено",5000);
+                ui->connectionLabel->setText("Текущее подключение: \n"+db.connectionName());
             }
             else
             {
-                dataBaseEDR.close();
+                db.close();
+                ui->connectionLabel->setText("Текущее подключение: \nNone");
+                ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено",5000);
             }
-        }
-        else
-        {
-            ui->connectionLabel->setText("Текущее подключение: \nNone");
-            ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено",5000);
         }
 }
 
@@ -220,11 +236,11 @@ void MainWindow::on_showData_clicked()
     if(ui->radioButton->isChecked() && ui->outgoing->isChecked())
     {
         AbonentSelected = true;
-        ui->pushButton_6->setEnabled(true);
+        ui->analyseDataButton->setEnabled(true);
     }
     else
     {
-        ui->pushButton_6->setEnabled(false);
+        ui->analyseDataButton->setEnabled(false);
         AbonentSelected = false;
     }
     if(dataBaseEDR.isOpen() && ui->radioButton->isChecked())
@@ -610,7 +626,7 @@ void MainWindow::on_pushButton_3_clicked()
 void MainWindow::on_pushButton_2_clicked()
 {
     ui->tabWidget->setCurrentWidget(ui->tab_2);
-    ui->pushButton_6->setEnabled(0);
+    ui->analyseDataButton->setEnabled(0);
     AbonentSelected = false;
     if(!db.isOpen())
     {
@@ -901,15 +917,19 @@ void MainWindow::on_pushButton_5_clicked()
         ui->tableView->resizeColumnsToContents();
         ui->tableView->resizeRowsToContents();
         ui->tabWidget->setCurrentIndex(0);
-        ui->pushButton_6->setEnabled(false);
+        ui->analyseDataButton->setEnabled(false);
     }
     else QMessageBox::critical(this,"Ошибка подключения","Откройте БД/Подключитесь к ней");
 
 }
 
-void MainWindow::on_pushButton_6_clicked()
+void MainWindow::on_analyseDataButton_clicked()
 {
+    if(model->rowCount()>0)
+    {
         analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart());
+    }
+    else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
 }
 
 void MainWindow::on_pastePB_clicked()
@@ -1043,6 +1063,17 @@ QAbstractItemModel *MainWindow::modelFromFile(const QString& fileName)
     return new QStringListModel(words, completer);
 }
 
+QString MainWindow::toOneString(QStringList list,QString separator)
+{
+    QString result;
+    for(int i=0;i<list.size();i++)
+    {
+        result += list[i];
+        if(i<list.size()-1) result+=separator;
+    }
+    return result;
+}
+
 void MainWindow::on_driverCombo_currentIndexChanged(QString text)
 {
 
@@ -1079,4 +1110,49 @@ void MainWindow::openDatabaseEDR()
     dataBaseEDR.setUserName(settings->getSettigns("mainForm/postgresUserName").toString());
     dataBaseEDR.setPassword(settings->getSettigns("mainForm/postgresPassword").toString());
     dataBaseEDR.open();
+}
+
+
+void MainWindow::on_analyseDataButton_customContextMenuRequested(const QPoint &pos)
+{
+    QMenu *menu=new QMenu(this);
+    menu->addAction(actionSimple);
+    menu->addAction(actionDay);
+    menu->addAction(actionWeek);
+    menu->popup(ui->analyseDataButton->mapToGlobal(pos));
+}
+
+void MainWindow::customMenuActionTriggered()
+{
+    QAction *sendingAction = qobject_cast<QAction *> (sender());
+    if(sendingAction->text()=="Частотный анализ")
+    {
+        if(model->rowCount()>0)
+        {
+            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart());
+        }
+        else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
+    }
+    else if(sendingAction->text() == "Частотный анализ + Загрузка последние сутки")
+    {
+        if(model->rowCount()>0)
+        {
+            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),-1);
+        }
+        else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
+    }
+
+    else if(sendingAction->text() == "Частотный анализ + Загрузка последняя неделя")
+    {
+        if(model->rowCount()>0)
+        {
+            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),-7);
+        }
+        else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
+    }
+    else
+    {
+        QMessageBox::critical(this,"Critical","Как это возможно");
+        return;
+    }
 }

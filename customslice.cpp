@@ -85,7 +85,8 @@ void CustomSlice::getData()
 {
     if(IP.isEmpty() || Password.isEmpty() || Login.isEmpty())
     {
-        QMessageBox::warning(nullptr,"Warning","У приложения не получается подключиться к контроллеру,\nзаполните пожалуйста данные для авторизации");
+        QMessageBox::warning(nullptr,"Warning","У приложения не получится подключиться к контроллеру,пожалуйста,заполните данные для аутентификации.\n"
+                                               "Они расположены в меню выше графика с частотным анализом.\n♥ ");
         return;
     }
     cell.clear();
@@ -103,12 +104,6 @@ void CustomSlice::getData()
         return;
     }
 
-    QFile file;
-    file.setFileName("target");
-    file.open(QIODevice::WriteOnly);
-    QTextStream out(&file);
-    out << cell;
-    file.close();
     socket->disconnectFromHost();
     is_tg = false;
     socket->connectToHost(IP,23);

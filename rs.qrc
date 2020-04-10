@@ -31,5 +31,7 @@
         <file>images/cell.png</file>
         <file>images/direction.png</file>
         <file>images/main.ico</file>
+        <file>images/PieChart.png</file>
+        <file>images/week.png</file>
     </qresource>
 </RCC>

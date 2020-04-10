@@ -45,7 +45,7 @@ class AnalyseData:public QWidget
 
 public:
 
-    AnalyseData(QSqlQueryModel*model = nullptr,QString abonent = "",QString dates = "");
+    AnalyseData(QSqlQueryModel*model = nullptr,QString abonent = "",QString dates = "",int actionValue = 0);
 
     ~AnalyseData();
 
@@ -68,7 +68,7 @@ private slots:
 
     void showSettingsWidget();
 
-    QVector<cell2G> getChargeOf2GCellsFromMySQL(QVector<QString>);
+    QVector<cell2G> getChargeOf2GCellsFromMySQL(QVector<QString>,int days = 0);
 
     void ShowLoad(QString cell);
 
@@ -94,6 +94,8 @@ private:
     QBrush m_originalBrush;
 
     QVector<QLineSeries*> loadSeriesV;
+
+    int days;
 
 
 };

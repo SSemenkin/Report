@@ -6,7 +6,7 @@ AnalyseData::~AnalyseData()
         mysqldataBase.close();
 }
 
-AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates)
+AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates,int actionValue)
 {
     settings = new Settings();
     globalLay = new QVBoxLayout;
@@ -14,8 +14,18 @@ AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates)
     hideModel = model;
     currAbon = abonent;
     interval = dates;
+    days = abs(actionValue);
     updateWindowWidgets();
-    GenerateChart(getChargeOf2GCellsFromMySQL(Cells()));
+    if(!actionValue)
+    {
+        Cells();
+        GenerateChart(getChargeOf2GCellsFromMySQL(Cells()));
+    }
+    else
+    {
+        GenerateChart(getChargeOf2GCellsFromMySQL(Cells(),actionValue));
+    }
+
 
 }
 // отрисовка всей формы с графиками и прочим наполнением
@@ -83,7 +93,9 @@ void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
         icmChart->setTitleFont(font);
         icmChart->legend()->setFont(font);
 
-        chargeChart->setTitle("График нагрузки на сектора 2G за последние сутки,\nс которых звонил абонент");
+        if(days==1)
+            chargeChart->setTitle("График нагрузки на сектора 2G за последние сутки,\nс которых звонил абонент");
+        else chargeChart->setTitle("График нагрузки на сектора 2G за последнюю неделю,\nс которых звонил абонент");
         chargeChart->setAnimationOptions(QChart::SeriesAnimations);
         chargeChart->legend()->setAlignment(Qt::AlignRight);
         icmChart->setTitle("Интерференция на данных секторах");
@@ -93,13 +105,15 @@ void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
         QDateTimeAxis *axisX = new QDateTimeAxis;
         axisX->setTitleText("Время");
         axisX->setTickCount(10);
-        axisX->setFormat("hh:mm");
+        if(days==1) axisX->setFormat("hh:mm");
+        else axisX->setFormat("dd-MM hh::mm");
         chargeChart->addAxis(axisX,Qt::AlignBottom);
 
         QDateTimeAxis *axisXi = new QDateTimeAxis;
         axisXi->setTitleText("Время");
         axisXi->setTickCount(10);
-        axisXi->setFormat("hh:mm");
+        if(days==1) axisXi->setFormat("hh:mm");
+        else axisXi->setFormat("dd-MM hh::mm");
         icmChart->addAxis(axisXi,Qt::AlignBottom);
 
         QValueAxis *axisY = new QValueAxis();
@@ -119,7 +133,7 @@ void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
              tmpSeries->setName(cells2G[i].cellName);
              QLineSeries *tmpSeriesi = new QLineSeries();
              tmpSeriesi->setName(cells2G[i].cellName);
-             tmpSeries->setOpacity(0);
+             tmpSeries->setOpacity(0.2);
              loadSeriesV.push_back(tmpSeries);
              for(int j=0;j<cells2G[i].dates.size();j++)
              {
@@ -216,9 +230,14 @@ void AnalyseData::showSettingsWidget()
     a.exec();
 }
 
-QVector<cell2G> AnalyseData::getChargeOf2GCellsFromMySQL(QVector<QString> cells)
+QVector<cell2G> AnalyseData::getChargeOf2GCellsFromMySQL(QVector<QString> cells, int days)
 {
     QVector<cell2G> result(cells.size());
+    if(days == 0)
+    {
+        result.clear();
+        return result;
+    }
 
     if(openLocalDataBase())
     {
@@ -226,7 +245,7 @@ QVector<cell2G> AnalyseData::getChargeOf2GCellsFromMySQL(QVector<QString> cells)
         QString query;
         for(int i=0;i<cells.size();i++)
         {
-            query = "select TCH,SPEECH,GPRS,TIME,INTERFERENCE from bscrecords where RBS='"+cells[i].left(6)+"' and CELLNAME = '"+cells[i].right(1)+"' and TIME between '"+QDateTime::currentDateTime().addDays(-1).toString(Qt::ISODate)
+            query = "select TCH,SPEECH,GPRS,TIME,INTERFERENCE from bscrecords where RBS='"+cells[i].left(6)+"' and CELLNAME = '"+cells[i].right(1)+"' and TIME between '"+QDateTime::currentDateTime().addDays(days).toString(Qt::ISODate)
                     +"' and '"+QDateTime::currentDateTime().toString(Qt::ISODate)+"'";
             chargeModel->setQuery(query,mysqldataBase);
             cell2G tmp;
@@ -248,15 +267,19 @@ QVector<cell2G> AnalyseData::getChargeOf2GCellsFromMySQL(QVector<QString> cells)
 
 void AnalyseData::ShowLoad(QString cell)
 {
+    if(cell[0]=='L')
      for(int i=0;i<loadSeriesV.size();i++)
      {
-         if(cell == loadSeriesV[i]->name() && cell[0]=='L')
+         if(loadSeriesV[i]->name() == cell)
+         {
              loadSeriesV[i]->setOpacity(1);
+         }
          else
-             loadSeriesV[i]->setOpacity(0);
+         {
+             loadSeriesV[i]->setOpacity(0.2);
+         }
      }
 }
-
 
 void AnalyseData::xCopy(bool b)
 {
