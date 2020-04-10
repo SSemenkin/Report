@@ -181,7 +181,7 @@ void MainWindow::DbConnect()
 
         if(db.isOpen())
         {
-            ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено");
+            ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено",5000);
             ui->connectionLabel->setText("Текущее подключение: \n"+db.connectionName());
             if(ui->driverCombo->currentText() == "QPSQL")
             {
@@ -195,7 +195,7 @@ void MainWindow::DbConnect()
         else
         {
             ui->connectionLabel->setText("Текущее подключение: \nNone");
-            ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено");
+            ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено",5000);
         }
 }
 
@@ -695,12 +695,12 @@ void MainWindow::on_connect_clicked()
     db.open();
     if(db.isOpen())
     {
-        ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено");
+        ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено",5000);
         ui->connectionLabel->setText("Текущее подключение: \n"+db.connectionName());
     }
     else
     {
-        ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено");
+        ui->statusBar->showMessage("Статус соединения с БД: Соединение не установлено",5000);
         ui->connectionLabel->setText("Текущее подключение: \nNone");
     }
     if(!fromCallStat)
@@ -708,7 +708,6 @@ void MainWindow::on_connect_clicked()
         if(db.isOpen())
         {
             saveSettings();
-            QMessageBox::information(this,"Success","database is open/connection established");
             if(ui->driverCombo->currentText() == "QPSQL")
             {
                 openDatabaseEDR();
