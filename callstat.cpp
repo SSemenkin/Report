@@ -37,18 +37,18 @@ void CallStat::on_pushButton_clicked()
     if(driver == "QMYSQL")
     {
         dataBase.setPort(settings->getSettigns("mainForm/mySqlPort").toInt());
-        dataBase.setHostName(settings->getSettigns("mainForm/mySqlHost"));
-        dataBase.setDatabaseName(settings->getSettigns("mainForm/mySqlDatabaseName"));
-        dataBase.setUserName(settings->getSettigns("mainForm/mySqlUserName"));
-        dataBase.setPassword(settings->getSettigns("mainForm/mySqlPassword"));
+        dataBase.setHostName(settings->getSettigns("mainForm/mySqlHost").toString());
+        dataBase.setDatabaseName(settings->getSettigns("mainForm/mySqlDatabaseName").toString());
+        dataBase.setUserName(settings->getSettigns("mainForm/mySqlUserName").toString());
+        dataBase.setPassword(settings->getSettigns("mainForm/mySqlPassword").toString());
     }
     else if (driver == "QPSQL")
     {
         dataBase.setPort(settings->getSettigns("mainForm/postgresPort").toInt());
-        dataBase.setHostName(settings->getSettigns("mainForm/postgresHost"));
-        dataBase.setDatabaseName(settings->getSettigns("mainForm/postgresDatabaseName"));
-        dataBase.setUserName(settings->getSettigns("mainForm/postgresUserName"));
-        dataBase.setPassword(settings->getSettigns("mainForm/postgresPassword"));
+        dataBase.setHostName(settings->getSettigns("mainForm/postgresHost").toString());
+        dataBase.setDatabaseName(settings->getSettigns("mainForm/postgresDatabaseName").toString());
+        dataBase.setUserName(settings->getSettigns("mainForm/postgresUserName").toString());
+        dataBase.setPassword(settings->getSettigns("mainForm/postgresPassword").toString());
     }
     dataBase.open();
     if(!dataBase.isOpen())

@@ -24,9 +24,9 @@ public:
 
     QString getIP() const ;
 
-    QString getSettigns(QString key) const;
+    QVariant getSettigns(QString key) const;
 
-    void saveAuthData(QString key,QString value) const;
+    void saveAuthData(QString key,QVariant value) const;
 
     void saveSettings();
 

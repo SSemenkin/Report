@@ -1,45 +1,35 @@
 #include "analysedata.h"
 
-
-AnalyseData::AnalyseData()
-{
-
-}
-
 AnalyseData::~AnalyseData()
 {
-    dataBase.close();
+    if(mysqldataBase.isOpen())
+        mysqldataBase.close();
 }
 
 AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates)
 {
-
+    settings = new Settings();
     globalLay = new QVBoxLayout;
+    chartsLayout = new QHBoxLayout;
     hideModel = model;
     currAbon = abonent;
     interval = dates;
     updateWindowWidgets();
-    QVector<QString> cellFind = Cells();
+    GenerateChart(getChargeOf2GCellsFromMySQL(Cells()));
 
-//    if(openLocalDataBase())
-//    {
-        QVector<QVector<int>> loadData = prepareData(7,cellFind);
-        QVector<QVector<int>> icmBandData = prepareData(6,cellFind);
-        GenerateChart(loadData,icmBandData,getDateList(),cellFind);
-//    }
-    //else exit(1);
 }
-
-void AnalyseData::GenerateChart(QVector<QVector<int>> loadCell
-                                ,QVector<QVector<int>> icmBand,QVector<QString> dateList,QVector<QString> cellNames)
+// отрисовка всей формы с графиками и прочим наполнением
+void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
 {
+
     lb = new QTextEdit;
     lb->setFixedHeight(100);
     QFont font;
     font.setBold(true);
     font.setPixelSize(14);
+    this->setFont(font);
 
-    if(chastoti.size()!=0)
+    if(chastoti.size()>0)
     {
         QChart *pieChart = new QChart;
         pieChart->legend()->setAlignment(Qt::AlignRight);
@@ -63,8 +53,8 @@ void AnalyseData::GenerateChart(QVector<QVector<int>> loadCell
         if(chastoti.size()>20) value  = 20;
         for(int i=0;i<value;i++)
         {
-            slice = new CustomSlice(chastoti[i].first+'('+QString::number(double(double(chastoti[i].second)/double(Size)*100))+"%)",chastoti[i].second);
-            slice->setLabelFont(font);   
+            slice = new CustomSlice(chastoti[i].first,chastoti[i].second);
+            slice->setLabelFont(font);
             *pieSeries << slice;
 
         }
@@ -77,160 +67,127 @@ void AnalyseData::GenerateChart(QVector<QVector<int>> loadCell
         pieChart->setTitleFont(font);
         pieChart->legend()->setFont(font);
         pieChart->setFont(font);
-        chartView->setFixedHeight(700);
 
-        QMenuBar *bar = new QMenuBar(this);
-        QMenu *menu = new QMenu("File");
-        bar->addMenu(menu);
-        QAction *action = new QAction("Settings",this);
-        menu->addAction(action);
-
-        connect(action,&QAction::triggered,this,&AnalyseData::showSettingsWidget);
-
-
-        globalLay->addWidget(bar);
-
-        globalLay->addWidget(chartView);
+        chartsLayout->addWidget(chartView);
 
     }
-
-    if(dateList.size()!=0)
+    if(cells2G.size()>0)
     {
-
-        QChart *loadChart = new QChart;
-        QChart *icmChart = new QChart;
-        loadChart->setFont(font);
+        QTabWidget *tabWidget = new QTabWidget();
+        QChart *icmChart = new QChart();
+        QChart *chargeChart = new QChart();
+        chargeChart->setFont(font);
+        chargeChart->setTitleFont(font);
+        chargeChart->legend()->setFont(font);
         icmChart->setFont(font);
-        loadChart->setTitleFont(font);
         icmChart->setTitleFont(font);
-        loadChart->legend()->setFont(font);
         icmChart->legend()->setFont(font);
 
-        loadChart->setTitle("График загрузки базовых станций");
+        chargeChart->setTitle("График нагрузки на сектора 2G за последние сутки,\nс которых звонил абонент");
+        chargeChart->setAnimationOptions(QChart::SeriesAnimations);
+        chargeChart->legend()->setAlignment(Qt::AlignRight);
+        icmChart->setTitle("Интерференция на данных секторах");
+        icmChart->setAnimationOptions(QChart::SeriesAnimations);
+        icmChart->legend()->setAlignment(Qt::AlignRight);
+
         QDateTimeAxis *axisX = new QDateTimeAxis;
-        QDateTimeAxis *axisXband = new QDateTimeAxis;
+        axisX->setTitleText("Время");
+        axisX->setTickCount(10);
+        axisX->setFormat("hh:mm");
+        chargeChart->addAxis(axisX,Qt::AlignBottom);
 
-        QValueAxis *axisY = new QValueAxis;
-        QValueAxis *axisYband = new QValueAxis;
+        QDateTimeAxis *axisXi = new QDateTimeAxis;
+        axisXi->setTitleText("Время");
+        axisXi->setTickCount(10);
+        axisXi->setFormat("hh:mm");
+        icmChart->addAxis(axisXi,Qt::AlignBottom);
+
+        QValueAxis *axisY = new QValueAxis();
+        axisY->setTitleText("Загрузка(%)");
         axisY->setRange(0,100);
-        axisYband->setRange(0,6);
-        axisYband->setTickCount(7);
+        chargeChart->addAxis(axisY, Qt::AlignLeft);
 
+        QValueAxis *axisYi = new QValueAxis();
+        axisYi->setTitleText("Интерференция");
+        axisYi->setRange(0,5);
+        axisYi->setTickCount(6);
+        icmChart->addAxis(axisYi, Qt::AlignLeft);
 
-        for(int i=0;i<dateList.size();i++)
+        for(int i=0;i<cells2G.size();i++)
         {
-            for(int j=0;j<loadCell.size();j++)
-            {
-                QLineSeries *loadSeries = new QLineSeries;
-                QLineSeries *icmSeries = new QLineSeries;
-
-                loadSeries->setName(cellNames[i]);
-
-                loadSeries->setPointsVisible();
-                icmSeries->setPointsVisible();
-                for(int k=0;k<loadCell[j].size();k++)
-                {
-                    QStringList a = dateList[i].split(';');
-                    QStringList tmpDate = a[0].split('-');
-                    QStringList tmpTime = a[1].split(':');
-                    QDateTime pointInTime;
-                    pointInTime.setDate(QDate(tmpDate[0].toInt(),tmpDate[1].toInt(),tmpDate[2].toInt()));
-                    pointInTime.setTime(QTime(tmpTime[0].toInt(),tmpTime[1].toInt()));
-
-                    loadSeries->append(pointInTime.toMSecsSinceEpoch(),loadCell[j][k]);
-                    icmSeries->append(pointInTime.toMSecsSinceEpoch(),icmBand[j][k]);
-                }
-                loadChart->addSeries(loadSeries);
-                icmChart->addSeries(icmSeries);
-
-                loadSeries->attachAxis(axisY);
-                loadSeries->attachAxis(axisX);
-
-                icmSeries->attachAxis(axisYband);
-                icmSeries->attachAxis(axisXband);
-
-                loadChart->update();
-                icmChart->update();
-
-            }
+             QLineSeries *tmpSeries = new QLineSeries();
+             tmpSeries->setName(cells2G[i].cellName);
+             QLineSeries *tmpSeriesi = new QLineSeries();
+             tmpSeriesi->setName(cells2G[i].cellName);
+             for(int j=0;j<cells2G[i].dates.size();j++)
+             {
+                 tmpSeries->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].charges[j]);
+                 tmpSeriesi->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].inter[j]);
+             }
+             chargeChart->addSeries(tmpSeries);
+             icmChart->addSeries(tmpSeriesi);
+             tmpSeries->attachAxis(axisX);
+             tmpSeries->attachAxis(axisY);
+             tmpSeriesi->attachAxis(axisXi);
+             tmpSeriesi->attachAxis(axisYi);
         }
 
-        axisX->setFormat("dd MMM h:mm");
-        axisXband->setFormat("dd MMM h:mm");
-
-        loadChart->setTitle("Загрузка БС");
-        icmChart->setTitle("Интерференция БС");
-
-        QChartView *loadView = new QChartView(loadChart);
-        QChartView *icmView = new QChartView(icmChart);
-
-        loadChart->addAxis(axisY,Qt::AlignLeft);
-        loadChart->addAxis(axisX,Qt::AlignBottom);
-        icmChart->addAxis(axisYband,Qt::AlignLeft);
-        icmChart->addAxis(axisXband,Qt::AlignBottom);
-
-        loadChart->setAnimationOptions(QChart::AllAnimations);
-        icmChart->setAnimationOptions(QChart::AllAnimations);
-
-        loadView->setRenderHint(QPainter::Antialiasing);
-        icmView->setRenderHint(QPainter::Antialiasing);
-
-        globalLay->addWidget(loadView);
-        globalLay->addWidget(icmView);
-
+        QChartView *chartView = new QChartView(chargeChart);
+        chartView->setRenderHint(QPainter::Antialiasing);
+        QChartView *chartViewi = new QChartView(icmChart);
+        chartViewi->setRenderHint(QPainter::Antialiasing);
+        tabWidget->addTab(chartView,"Загрузка");
+        tabWidget->addTab(chartViewi,"Интерфернция");
+        chartsLayout->addWidget(tabWidget);
     }
-    else
-    {
-        //lb->setText("\nК сожалению данных о нагрузке нет");
 
+    QMenuBar *bar = new QMenuBar(this);
+    QMenu *menu = new QMenu("Настройки");
+    bar->addMenu(menu);
+    QAction *action = new QAction("Настройки подключения к BSC",this);
+    menu->addAction(action);
+    connect(action,&QAction::triggered,this,&AnalyseData::showSettingsWidget);
+    globalLay->addWidget(bar);
+    globalLay->addLayout(chartsLayout);
 
-       QHBoxLayout  *hbox = new QHBoxLayout;
+    QHBoxLayout  *hbox = new QHBoxLayout;
 
-       QPushButton *pb = new QPushButton;
+    QPushButton *pb = new QPushButton;
 
-       pb->setIcon(QIcon(":/images/xCopy.png"));
-       pb->setText("Copy Commands");
-       pb->setAttribute(Qt::WA_TranslucentBackground);
+    pb->setIcon(QIcon(":/images/xCopy.png"));
+    pb->setText("Copy Commands");
+    pb->setAttribute(Qt::WA_TranslucentBackground);
 
+    connect(pb,&QPushButton::clicked,this,&AnalyseData::xCopy);
+    QVBoxLayout *vbox = new QVBoxLayout;
+    ch2G = new QCheckBox;
+    ch2G->setText("Добавить команды для сети 2G");
+    ch3G = new QCheckBox;
+    ch3G->setText("Добавить команды для сети 3G");
 
+    connect(ch2G,&QCheckBox::stateChanged,this,&AnalyseData::setCommands);
+    connect(ch3G,&QCheckBox::stateChanged,this,&AnalyseData::setCommands);
 
-       connect(pb,&QPushButton::clicked,this,&AnalyseData::xCopy);
-       QVBoxLayout *vbox = new QVBoxLayout;
-       ch2G = new QCheckBox;
-       ch2G->setText("Добавить команды для сети 2G");
-       ch3G = new QCheckBox;
-       ch3G->setText("Добавить команды для сети 3G");
+    vbox->addWidget(ch2G);
+    vbox->addWidget(ch3G);
+    vbox->addWidget(pb);
 
+    hbox->addWidget(lb);
+    hbox->addLayout(vbox);
 
-       connect(ch2G,&QCheckBox::stateChanged,this,&AnalyseData::setCommands);
-       connect(ch3G,&QCheckBox::stateChanged,this,&AnalyseData::setCommands);
+    globalLay->addLayout(hbox);
 
-       vbox->addWidget(ch2G);
-       vbox->addWidget(ch3G);
-       vbox->addWidget(pb);
-
-       hbox->addWidget(lb);
-       hbox->addLayout(vbox);
-
-       globalLay->addLayout(hbox);
-
-       pb->setStyleSheet("background-color:white;"
+    pb->setStyleSheet("background-color:white;"
                          "color:black");
 
 
-
-       globalLay->addLayout(hbox);
-       globalLay->setAlignment(pb,Qt::AlignBottom);
-
-       globalLay->addWidget(getCompleteListCell());
+    globalLay->setAlignment(pb,Qt::AlignBottom);
 
 
-
-    }
     this->setLayout(globalLay);
-    this->resize(1400,800);
+    this->showMaximized();
 }
-
+//наполнение командами для просмотра нагрузки
 void AnalyseData::setCommands(int value)
 {
     Q_UNUSED(value);
@@ -256,24 +213,40 @@ void AnalyseData::showSettingsWidget()
     a.exec();
 }
 
+QVector<cell2G> AnalyseData::getChargeOf2GCellsFromMySQL(QVector<QString> cells)
+{
+    QVector<cell2G> result(cells.size());
+
+    if(openLocalDataBase())
+    {
+        QSqlQueryModel *chargeModel = new QSqlQueryModel;
+        QString query;
+        for(int i=0;i<cells.size();i++)
+        {
+            query = "select TCH,SPEECH,GPRS,TIME,INTERFERENCE from bscrecords where RBS='"+cells[i].left(6)+"' and CELLNAME = '"+cells[i].right(1)+"' and TIME between '"+QDateTime::currentDateTime().addDays(-1).toString(Qt::ISODate)
+                    +"' and '"+QDateTime::currentDateTime().toString(Qt::ISODate)+"'";
+            chargeModel->setQuery(query,mysqldataBase);
+            cell2G tmp;
+            tmp.cellName = cells[i];
+            for(int j=0;j<chargeModel->rowCount();j++)
+            {
+                tmp.dates.push_back(QDateTime::fromString(chargeModel->data(chargeModel->index(j,3)).toString(),Qt::ISODate));
+                tmp.charges.push_back(((chargeModel->index(j,1).data().toFloat()+chargeModel->index(j,2).data().toFloat()) / chargeModel->index(j,0).data().toFloat())*100.0);
+                tmp.inter.push_back(chargeModel->index(j,4).data().toInt());
+            }
+            result[i] = tmp;
+        }
+        delete chargeModel;
+        mysqldataBase.close();
+    }
+
+    return result;
+}
+
 void AnalyseData::xCopy(bool b)
 {
     Q_UNUSED(b);
     QApplication::clipboard()->setText(lb->toPlainText());
-}
-
-QVector<QString> AnalyseData::getDateList()
-{
-    QVector<QString> result;
-    QSqlQueryModel *tmpModel = new QSqlQueryModel;
-    QString tmpRequest = "SELECT distinct records.date_charge, records.time_charge from (stats inner join records on stats.id_time=records.ID) inner join geographic on stats.RBS=geographic.cell_name"
-                         " where "+interval.right(interval.length()-4)+" order by records.date_charge;";
-    tmpModel->setQuery(tmpRequest,dataBase);
-    while(tmpModel->canFetchMore()) tmpModel->fetchMore();
-
-    for(int i=0;i<tmpModel->rowCount();i++)
-        result.push_back( tmpModel->data(tmpModel->index(i,0)).toString() +';'+tmpModel->data(tmpModel->index(i,1)).toString());
-    return result;
 }
 
 void AnalyseData::swap(QPair<QString,int> &a,QPair<QString,int> &b)
@@ -284,71 +257,27 @@ void AnalyseData::swap(QPair<QString,int> &a,QPair<QString,int> &b)
     b = tmp;
 }
 
-QVector<QColor> AnalyseData::getPalitra()
-{
-    QVector<QColor> resultData;
-    QFile file;
-    file.setFileName("colors.txt");
-    file.open(QIODevice::ReadOnly);
-    if(file.isOpen())
-    {
-        QString buffer;
-        while(!file.atEnd())
-        {
-            buffer=file.readLine();
-            if(buffer[0]!='#')
-            {
-                QStringList a = buffer.split(',');
-                resultData.push_back(QColor(a[0].toInt(),a[1].toInt(),a[2].toInt()));
-            }
-        }
-    }
-
-    if(resultData.size()==0) resultData.push_back(QColor(0,0,0));
-
-    return resultData;
-}
-
 bool AnalyseData::openLocalDataBase()
 {
-   return true;
+    QSqlDatabase::contains("QMYSQL_detail_connection") ? mysqldataBase = QSqlDatabase::database("QMYSQL_detail_connection") :
+            mysqldataBase = QSqlDatabase::addDatabase("QMYSQL","QMYSQL_detail_connection");
+    mysqldataBase.setPort(settings->getSettigns("mainForm/mySqlPort").toInt());
+    mysqldataBase.setHostName(settings->getSettigns("mainForm/mySqlHost").toString());
+    mysqldataBase.setDatabaseName(settings->getSettigns("mainForm/mysqlDatabaseName").toString());
+    mysqldataBase.setUserName(settings->getSettigns("mainForm/mySqlUserName").toString());
+    mysqldataBase.setPassword(settings->getSettigns("mainForm/mySqlPassword").toString());
+    mysqldataBase.open();
+    return mysqldataBase.isOpen();
 }
 
 void AnalyseData::updateWindowWidgets()
 {
 
-    this->setWindowTitle("Детальная информация об абоненте "+currAbon);
+    this->setWindowTitle("Исходящие абонента "+currAbon);
     this->setWindowIcon(QIcon(":/images/detail.png"));
 }
 
-QVector<QVector<int>> AnalyseData::prepareData(int columnIndex,QVector<QString> findCells)
-{
-    QVector<QVector<int>> Data;
-
-    QString requestModel = "SELECT * from (stats inner join records on stats.id_time=records.ID) inner join geographic on stats.RBS=geographic.cell_name";
-
-    QSqlQueryModel *tmpModel = new QSqlQueryModel;
-
-
-    for(int i=0;i<findCells.size();i++)
-    {
-        QString tmpRequest =requestModel + " where stats.RBS='"+findCells[i].left(6)+
-                "' and stats.cell_name = '"+findCells[i].right(1)+"' "+interval+" order by records.date_charge;";
-        tmpModel->setQuery(tmpRequest,dataBase);
-        while(tmpModel->canFetchMore()) tmpModel->fetchMore();
-
-        QVector<int> localDataCell;
-
-        for(int j=0;j<tmpModel->rowCount();j++)
-        {
-            localDataCell.push_back(tmpModel->data(tmpModel->index(j,columnIndex)).toInt());
-        }
-
-        Data.push_back(localDataCell);
-    }
-    return Data;
-}
-
+// метод заполняет частоты появления секторов, а также отделяет сектора 2г в отдельный вектор results
 QVector<QString> AnalyseData::Cells()
 {
     QVector<QString> result;
@@ -399,7 +328,7 @@ QVector<QString> AnalyseData::Cells()
             if(!is_find) result.push_back(tmpName);
         }
         else {
-            QString cell = "3G(IdCell = "+ hideModel->data(hideModel->index(i,9)).toString()+" )";
+            QString cell = "(3G)"+ hideModel->data(hideModel->index(i,9)).toString();
             bool was = false;
             for(int j=0;j<chastoti.size();j++)
             {
@@ -418,56 +347,4 @@ QVector<QString> AnalyseData::Cells()
 
     }
     return result;
-}
-
-QTextBrowser* AnalyseData::getCompleteListCell()
-{
-    QStringList listCell;
-    QFile file;
-    file.setFileName("base.txt");
-    file.open(QIODevice::ReadOnly);
-    QTextStream inFile(&file);
-    if(file.isOpen())
-    {
-        QString buffer;
-        while(!inFile.atEnd())
-        {
-            buffer = inFile.readLine();
-            for(int i=0;i<chastoti.size();i++)
-            {
-                QString normalCellName;
-                chastoti[i].first[0]=='3'? normalCellName = chastoti[i].first.right(7).left(5)
-                        : normalCellName = chastoti[i].first.left(6);
-                if(normalCellName==buffer.left(normalCellName.length()))
-                {
-                    listCell.push_back(buffer);
-                    break;
-                }
-            }
-        }
-    }
-    file.close();
-
-    QStringList tmp = listCell;
-    listCell.clear();
-
-    for(int i=0;i<chastoti.size();i++)
-        for(int j=0;j<tmp.length();j++)
-            if(chastoti[i].first[0]=='3')
-            {
-                if(chastoti[i].first.right(7).left(5)==tmp[j].left(5)) listCell.push_back(tmp[j]);
-            }
-            else
-            {
-                if(chastoti[i].first.left(6)==tmp[j].left(6)) listCell.push_back(tmp[j]);
-            }
-
-    QTextBrowser *tb = new QTextBrowser;
-    QFont font;
-    font.setPixelSize(16);
-    tb->setFont(font);
-    tb->setAlignment(Qt::AlignCenter);
-    for(int i=0;i<listCell.size();i++)
-        tb->setText(tb->toPlainText()+listCell[i]+"\n");
-    return tb;
 }

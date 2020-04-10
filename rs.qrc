@@ -31,6 +31,5 @@
         <file>images/cell.png</file>
         <file>images/direction.png</file>
         <file>images/main.ico</file>
-        <file>wordlist.txt</file>
     </qresource>
 </RCC>

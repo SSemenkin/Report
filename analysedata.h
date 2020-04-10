@@ -21,12 +21,22 @@
 #include <QPalette>
 #include <QLinearGradient>
 #include <QScrollArea>
+#include <QDateTime>
+#include <QTabWidget>
 
 #include "customslice.h"
 #include "settings.h"
 
 
 QT_CHARTS_USE_NAMESPACE
+
+struct cell2G
+{
+    QString cellName;
+    QVector<float> charges;
+    QVector<QDateTime> dates;
+    QVector<int> inter;
+};
 
 
 class AnalyseData:public QWidget
@@ -37,36 +47,28 @@ public:
 
     AnalyseData(QSqlQueryModel*model = nullptr,QString abonent = "",QString dates = "");
 
-    AnalyseData();
-
     ~AnalyseData();
 
 
 private slots:
 
-    void GenerateChart(QVector<QVector<int>> loadCell,QVector<QVector<int>> icmBand,QVector<QString> dateList,QVector<QString>);
+    void GenerateChart(QVector<cell2G>);
 
     bool openLocalDataBase();
 
     void updateWindowWidgets();
 
-    QVector<QVector<int>> prepareData(int columnName,QVector<QString> findCells);
-
     QVector<QString> Cells();
-
-    QVector<QString> getDateList();
 
     void xCopy(bool);
 
-    QTextBrowser* getCompleteListCell();
-
     void swap(QPair<QString,int>  &,QPair<QString,int> &);
-
-    QVector<QColor> getPalitra();
 
     void setCommands(int);
 
     void showSettingsWidget();
+
+    QVector<cell2G> getChargeOf2GCellsFromMySQL(QVector<QString>);
 
 private:
 
@@ -77,13 +79,14 @@ private:
     QVector<QPair<QString,int>> chastoti;
 
     QVBoxLayout *globalLay;
-
+    QHBoxLayout *chartsLayout;
     QTextEdit *lb;
 
     QCheckBox *ch2G,*ch3G;
 
-    QSqlDatabase dataBase;
+    QSqlDatabase mysqldataBase;
 
+    Settings *settings;
 
 
 };

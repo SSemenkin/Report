@@ -42,7 +42,17 @@ CustomSlice::CustomSlice(QString label, qreal value)
     delete settings;
 
 
-    setBrush(QColor(rand()%255,rand()%255,rand()%255).lighter());
+    int red = rand()%256;
+    int green = rand()%256;
+    int blue = rand()%256;
+    if(red + green + blue > 700)
+    {
+        red -= 50;
+        blue -=50;
+        green -=50;
+    }
+    setBrush(QColor(red,green,blue));
+
     socket = new QTcpSocket;
     connect(this, &CustomSlice::hovered, this, &CustomSlice::showHighlight);
     connect(this,&CustomSlice::pressed,this,&CustomSlice::getData);
@@ -71,6 +81,11 @@ void CustomSlice::showHighlight(bool show)
 
 void CustomSlice::getData()
 {
+    if(IP.isEmpty() || Password.isEmpty() || Login.isEmpty())
+    {
+        QMessageBox::warning(nullptr,"Warning","У приложения не получается подключиться к контроллеру,\nзаполните пожалуйста данные для авторизации");
+        return;
+    }
     cell.clear();
     if(this->label().toStdString()[0]=='L')
     {
@@ -95,6 +110,7 @@ void CustomSlice::getData()
     socket->disconnectFromHost();
     is_tg = false;
     socket->connectToHost(IP,23);
+
 }
 
 void CustomSlice::readData() //Telnet Connection

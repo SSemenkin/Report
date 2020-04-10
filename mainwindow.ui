@@ -189,7 +189,7 @@
            <item>
             <widget class="QPushButton" name="pushButton_6">
              <property name="text">
-              <string>Анализ секторов</string>
+              <string>Анализ данных CDR</string>
              </property>
             </widget>
            </item>
@@ -375,7 +375,7 @@
        <string notr="true"/>
       </property>
       <property name="title">
-       <string>Подключение к БД</string>
+       <string>Подключение к основной БД CDR</string>
       </property>
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="2">
@@ -748,7 +748,7 @@ padding-right:5px;</string>
     <item row="2" column="0" colspan="4">
      <widget class="QGroupBox" name="groupBox_7">
       <property name="title">
-       <string>SQL-Query</string>
+       <string>SQL-Запрос</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_8">
        <item row="0" column="0">
