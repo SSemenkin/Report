@@ -52,10 +52,10 @@ CustomSlice::CustomSlice(QString label, qreal value)
         green -=50;
     }
     setBrush(QColor(red,green,blue));
+    setLabelArmLengthFactor(0);
 
     socket = new QTcpSocket;
     connect(this, &CustomSlice::hovered, this, &CustomSlice::showHighlight);
-    //connect(this,&CustomSlice::pressed,this,&CustomSlice::getData);
     connect(this,&CustomSlice::clicked,this,&CustomSlice::getLoadData);
     connect(socket,&QTcpSocket::readyRead,this,&CustomSlice::readData);
     connect(this,&CustomSlice::doubleClicked,this,&CustomSlice::getData);
@@ -72,7 +72,7 @@ void CustomSlice::showHighlight(bool show)
     if (show) {
         QBrush brush = this->brush();
         m_originalBrush = brush;
-        brush.setColor(QColor(220, 20, 60));
+        brush.setColor(QColor(0, 250, 154));
         setExploded();
         setBrush(brush);
     } else {

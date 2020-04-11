@@ -102,9 +102,7 @@ private slots:
 
     void openDatabaseEDR();
 
-    void on_analyseDataButton_customContextMenuRequested(const QPoint &pos);
-
-    void customMenuActionTriggered();
+    void execAnalyseWithLoadChart();
 
 private:
 

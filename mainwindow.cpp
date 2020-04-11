@@ -9,16 +9,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     settings = new Settings();
     edr_model = new QSqlQueryModel();
-    ui->analyseDataButton->setContextMenuPolicy(Qt::CustomContextMenu);
-
-    actionDay = new QAction(QIcon(":/images/day.png"),"Частотный анализ + Загрузка последние сутки",this);
-    actionSimple = new QAction(QIcon(":/images/PieChart.png"),"Частотный анализ",this);
-    actionWeek = new QAction(QIcon(":/images/week.png"),"Частотный анализ + Загрузка последняя неделя",this);
-
-
-    connect(actionDay,&QAction::triggered,this,&MainWindow::customMenuActionTriggered);
-    connect(actionSimple,&QAction::triggered,this,&MainWindow::customMenuActionTriggered);
-    connect(actionWeek,&QAction::triggered,this,&MainWindow::customMenuActionTriggered);
 
     onStart();
     DbConnect();
@@ -109,10 +99,7 @@ void MainWindow::onStart()
 
     ui->verticalLayout_4->setAlignment(ui->saveToFile,Qt::AlignHCenter);
 
-    ui->showData->setFixedWidth(170);
-    ui->cellStat->setFixedWidth(170);
-    ui->analyseDataButton->setFixedWidth(170);
-    ui->saveToFile->setFixedWidth(170);
+
     abonentLine->setFixedWidth(250);
     ui->pastePB->setFixedWidth(50);
 
@@ -176,6 +163,7 @@ void MainWindow::onStart()
     connect(ui->actionExit,&QAction::triggered,this,&QApplication::quit);
     connect(abonentLine,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
     connect(IMEI,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
+    connect(ui->chartButton,&QPushButton::clicked,this,&MainWindow::execAnalyseWithLoadChart);
 
 
 
@@ -233,16 +221,7 @@ void MainWindow::on_showData_clicked()
     ui->tabWidget->setCurrentWidget(ui->tab);
     QApplication::setOverrideCursor(Qt::WaitCursor);
     abonentAnalyse(-1);
-    if(ui->radioButton->isChecked() && ui->outgoing->isChecked())
-    {
-        AbonentSelected = true;
-        ui->analyseDataButton->setEnabled(true);
-    }
-    else
-    {
-        ui->analyseDataButton->setEnabled(false);
-        AbonentSelected = false;
-    }
+
     if(dataBaseEDR.isOpen() && ui->radioButton->isChecked())
     {
         QString request = "select datecharge,eventidentity,result,radiotype,typerau,intrarautype"
@@ -506,6 +485,18 @@ void MainWindow::on_showData_clicked()
         if(ui->radioButton_5->isChecked())
             SaveToFile(ui->comboBox->currentText());
     }
+    if(ui->radioButton->isChecked() && model->rowCount()>0)
+    {
+        AbonentSelected = true;
+        ui->analyseDataButton->setEnabled(true);
+        ui->chartButton->setEnabled(true);
+    }
+    else
+    {
+        ui->analyseDataButton->setEnabled(false);
+        ui->chartButton->setEnabled(false);
+        AbonentSelected = false;
+    }
 
     QApplication::setOverrideCursor(Qt::ArrowCursor);
 }
@@ -627,6 +618,7 @@ void MainWindow::on_pushButton_2_clicked()
 {
     ui->tabWidget->setCurrentWidget(ui->tab_2);
     ui->analyseDataButton->setEnabled(0);
+    ui->chartButton->setEnabled(false);
     AbonentSelected = false;
     if(!db.isOpen())
     {
@@ -918,6 +910,7 @@ void MainWindow::on_pushButton_5_clicked()
         ui->tableView->resizeRowsToContents();
         ui->tabWidget->setCurrentIndex(0);
         ui->analyseDataButton->setEnabled(false);
+        ui->chartButton->setEnabled(false);
     }
     else QMessageBox::critical(this,"Ошибка подключения","Откройте БД/Подключитесь к ней");
 
@@ -1112,47 +1105,11 @@ void MainWindow::openDatabaseEDR()
     dataBaseEDR.open();
 }
 
-
-void MainWindow::on_analyseDataButton_customContextMenuRequested(const QPoint &pos)
+void MainWindow::execAnalyseWithLoadChart()
 {
-    QMenu *menu=new QMenu(this);
-    menu->addAction(actionSimple);
-    menu->addAction(actionDay);
-    menu->addAction(actionWeek);
-    menu->popup(ui->analyseDataButton->mapToGlobal(pos));
-}
-
-void MainWindow::customMenuActionTriggered()
-{
-    QAction *sendingAction = qobject_cast<QAction *> (sender());
-    if(sendingAction->text()=="Частотный анализ")
+    if(model->rowCount()>0)
     {
-        if(model->rowCount()>0)
-        {
-            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart());
-        }
-        else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
+        analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),-3);
     }
-    else if(sendingAction->text() == "Частотный анализ + Загрузка последние сутки")
-    {
-        if(model->rowCount()>0)
-        {
-            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),-1);
-        }
-        else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
-    }
-
-    else if(sendingAction->text() == "Частотный анализ + Загрузка последняя неделя")
-    {
-        if(model->rowCount()>0)
-        {
-            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),-7);
-        }
-        else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
-    }
-    else
-    {
-        QMessageBox::critical(this,"Critical","Как это возможно");
-        return;
-    }
+    else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
 }

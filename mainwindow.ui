@@ -181,6 +181,12 @@
            </item>
            <item>
             <widget class="QPushButton" name="cellStat">
+             <property name="maximumSize">
+              <size>
+               <width>170</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
               <string>Исходящие с сектора</string>
              </property>
@@ -191,11 +197,14 @@
              <property name="enabled">
               <bool>false</bool>
              </property>
+             <property name="maximumSize">
+              <size>
+               <width>170</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="tabletTracking">
               <bool>false</bool>
-             </property>
-             <property name="toolTip">
-              <string>При нажатии правой кнопкой мыши возможны варианты</string>
              </property>
              <property name="styleSheet">
               <string notr="true"/>
@@ -215,7 +224,29 @@
             </widget>
            </item>
            <item>
+            <widget class="QPushButton" name="chartButton">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>170</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string> + графики загрузки</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="showData">
+             <property name="maximumSize">
+              <size>
+               <width>170</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="styleSheet">
               <string notr="true"/>
              </property>
@@ -235,6 +266,12 @@
            </item>
            <item>
             <widget class="QCheckBox" name="saveToFile">
+             <property name="layoutDirection">
+              <enum>Qt::LeftToRight</enum>
+             </property>
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
              <property name="styleSheet">
               <string notr="true">border:none;</string>
              </property>

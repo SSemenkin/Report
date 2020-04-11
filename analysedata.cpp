@@ -106,14 +106,14 @@ void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
         axisX->setTitleText("Время");
         axisX->setTickCount(10);
         if(days==1) axisX->setFormat("hh:mm");
-        else axisX->setFormat("dd-MM hh::mm");
+        else axisX->setFormat("dd-MM hh:mm");
         chargeChart->addAxis(axisX,Qt::AlignBottom);
 
         QDateTimeAxis *axisXi = new QDateTimeAxis;
         axisXi->setTitleText("Время");
         axisXi->setTickCount(10);
         if(days==1) axisXi->setFormat("hh:mm");
-        else axisXi->setFormat("dd-MM hh::mm");
+        else axisXi->setFormat("dd-MM hh:mm");
         icmChart->addAxis(axisXi,Qt::AlignBottom);
 
         QValueAxis *axisY = new QValueAxis();
