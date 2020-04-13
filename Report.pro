@@ -36,6 +36,7 @@ CONFIG += c++11
 SOURCES += \
         analysedata.cpp \
         callstat.cpp \
+        chartbyseparatethread.cpp \
         customslice.cpp \
         loadstatecheck.cpp \
         main.cpp \
@@ -47,6 +48,7 @@ SOURCES += \
 HEADERS += \
         analysedata.h \
         callstat.h \
+        chartbyseparatethread.h \
         customslice.h \
         loadstatecheck.h \
         mainwindow.h \

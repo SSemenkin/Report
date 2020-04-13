@@ -23,20 +23,15 @@
 #include <QScrollArea>
 #include <QDateTime>
 #include <QTabWidget>
+#include <QThread>
+#include <QTimer>
 
 #include "customslice.h"
 #include "settings.h"
-
+#include "chartbyseparatethread.h"
 
 QT_CHARTS_USE_NAMESPACE
 
-struct cell2G
-{
-    QString cellName;
-    QVector<float> charges;
-    QVector<QDateTime> dates;
-    QVector<int> inter;
-};
 
 
 class AnalyseData:public QWidget
@@ -52,9 +47,7 @@ public:
 
 private slots:
 
-    void GenerateChart(QVector<cell2G>);
-
-    bool openLocalDataBase();
+    void GenerateChart();
 
     void updateWindowWidgets();
 
@@ -68,10 +61,17 @@ private slots:
 
     void showSettingsWidget();
 
-    QVector<cell2G> getChargeOf2GCellsFromMySQL(QVector<QString>,int days = 0);
-
     void ShowLoad(QString cell);
 
+    QChartView *buildPieChart();
+
+    QTabWidget *buildLineCharts(QVector<cell2G> cells2G);
+
+    void storeResult();
+
+    void repaintModel();
+
+    void changeText();
 
 private:
 
@@ -82,21 +82,31 @@ private:
     QVector<QPair<QString,int>> chastoti;
 
     QVBoxLayout *globalLay;
+
     QHBoxLayout *chartsLayout;
+
     QTextEdit *lb;
 
     QCheckBox *ch2G,*ch3G;
 
-    QSqlDatabase mysqldataBase;
-
     Settings *settings;
 
-    QBrush m_originalBrush;
+    QVector<QLineSeries*> loadSeriesV,interSeries;
 
-    QVector<QLineSeries*> loadSeriesV;
+    QVector<CustomSlice*> customSlices;
 
     int days;
 
+    QThread *threadToSQLDatabase;
+    ChartBySeparateThread *sepChartClass;
+
+    QVector<QString> cells;
+
+    QVector<cell2G> returnedData;
+
+    QLabel *label;
+
+    QTimer *timer;
 
 };
 

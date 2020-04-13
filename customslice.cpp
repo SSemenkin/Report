@@ -35,11 +35,11 @@ CustomSlice::CustomSlice(QString label, qreal value)
     : QPieSlice(label, value)
 {   
 
-    Settings *settings = new Settings();
-    IP = settings->getIP();
-    Login = settings->getLogin();
-    Password  = settings->getPassword();
-    delete settings;
+    loadSettings();
+
+    if(this->value()>2)
+        setLabelPosition(LabelInsideNormal);
+    else setLabelPosition(LabelOutside);
 
 
     int red = rand()%256;
@@ -56,9 +56,9 @@ CustomSlice::CustomSlice(QString label, qreal value)
 
     socket = new QTcpSocket;
     connect(this, &CustomSlice::hovered, this, &CustomSlice::showHighlight);
-    connect(this,&CustomSlice::clicked,this,&CustomSlice::getLoadData);
+    connect(this,&CustomSlice::clicked,this,&CustomSlice::getData);
     connect(socket,&QTcpSocket::readyRead,this,&CustomSlice::readData);
-    connect(this,&CustomSlice::doubleClicked,this,&CustomSlice::getData);
+
 
 }
 
@@ -75,6 +75,7 @@ void CustomSlice::showHighlight(bool show)
         brush.setColor(QColor(0, 250, 154));
         setExploded();
         setBrush(brush);
+        emit sliceHovered(label());
     } else {
         setBrush(m_originalBrush);
         setExploded(false);
@@ -110,9 +111,13 @@ void CustomSlice::getData()
 
 }
 
-void CustomSlice::getLoadData()
+void CustomSlice::loadSettings()
 {
-    emit sliceClicked(label());
+    Settings *settings = new Settings();
+    IP = settings->getIP();
+    Login = settings->getLogin();
+    Password  = settings->getPassword();
+    delete settings;
 }
 
 void CustomSlice::readData() //Telnet Connection

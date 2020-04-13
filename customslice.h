@@ -65,11 +65,11 @@ public Q_SLOTS:
 
     void getData();
 
-    void getLoadData();
+    void loadSettings();
 
 signals:
 
-    void sliceClicked(QString);
+    void sliceHovered(QString);
 
 private:
 

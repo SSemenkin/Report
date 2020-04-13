@@ -2,8 +2,7 @@
 
 AnalyseData::~AnalyseData()
 {
-    if(mysqldataBase.isOpen())
-        mysqldataBase.close();
+
 }
 
 AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates,int actionValue)
@@ -15,21 +14,24 @@ AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates,int
     currAbon = abonent;
     interval = dates;
     days = abs(actionValue);
+    timer = new QTimer();
+    label = new QLabel("Получение данных о загрузке...");
     updateWindowWidgets();
     if(!actionValue)
     {
-        Cells();
-        GenerateChart(getChargeOf2GCellsFromMySQL(Cells()));
+        cells = Cells();
+        GenerateChart();
     }
     else
     {
-        GenerateChart(getChargeOf2GCellsFromMySQL(Cells(),actionValue));
+        cells = Cells();
+        GenerateChart();
     }
 
 
 }
 // отрисовка всей формы с графиками и прочим наполнением
-void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
+void AnalyseData::GenerateChart()
 {
 
     lb = new QTextEdit;
@@ -41,121 +43,23 @@ void AnalyseData::GenerateChart(QVector<cell2G> cells2G)
 
     if(chastoti.size()>0)
     {
-        QChart *pieChart = new QChart;
-        pieChart->legend()->setAlignment(Qt::AlignRight);
-        pieChart->setTitle("Частотный анализ секторов");
-        pieChart->setAnimationOptions(QChart::AllAnimations);
-
-
-        QPieSeries *pieSeries = new QPieSeries();
-        int Size = 0;
-        for(int i=0;i<chastoti.size();i++)
-            Size+=chastoti[i].second;
-
-
-        for(int i=0;i<chastoti.size();i++)
-            for(int j=0;j<chastoti.size()-1;j++)
-                if(chastoti[j].second<chastoti[j+1].second) swap(chastoti[j],chastoti[j+1]);
-
-
-        CustomSlice *slice;
-
-        for(int i=0;i<chastoti.size() && i < 20;i++)
-        {
-            slice = new CustomSlice(chastoti[i].first,chastoti[i].second);
-            connect(slice,&CustomSlice::sliceClicked,this,&AnalyseData::ShowLoad);
-            slice->setLabelFont(font);
-            *pieSeries << slice;
-
-        }
-        pieChart->addSeries(pieSeries);
-        pieSeries->setLabelsVisible(true);
-
-        QChartView *chartView = new QChartView();
-        chartView->setRenderHint(QPainter::Antialiasing);
-        chartView->setChart(pieChart);
-        pieChart->setTitleFont(font);
-        pieChart->legend()->setFont(font);
-        pieChart->setFont(font);
-
-        chartsLayout->addWidget(chartView);
-
+        chartsLayout->addWidget(buildPieChart());
     }
-    if(cells2G.size()>0)
+    if(days!=0)
     {
-        QTabWidget *tabWidget = new QTabWidget();
-        QChart *icmChart = new QChart();
-        QChart *chargeChart = new QChart();
-        chargeChart->setFont(font);
-        chargeChart->setTitleFont(font);
-        chargeChart->legend()->setFont(font);
-        icmChart->setFont(font);
-        icmChart->setTitleFont(font);
-        icmChart->legend()->setFont(font);
+        chartsLayout->addWidget(label);
+        timer->setInterval(500);
+        connect(timer,&QTimer::timeout,this,&AnalyseData::changeText);
+        timer->start();
+        threadToSQLDatabase = new QThread();
+        sepChartClass = new ChartBySeparateThread();
+        sepChartClass->cells = cells;
+        sepChartClass->days = days;
 
-        if(days==1)
-            chargeChart->setTitle("График нагрузки на сектора 2G за последние сутки,\nс которых звонил абонент");
-        else chargeChart->setTitle("График нагрузки на сектора 2G за последнюю неделю,\nс которых звонил абонент");
-        chargeChart->setAnimationOptions(QChart::SeriesAnimations);
-        chargeChart->legend()->setAlignment(Qt::AlignRight);
-        icmChart->setTitle("Интерференция на данных секторах");
-        icmChart->setAnimationOptions(QChart::SeriesAnimations);
-        icmChart->legend()->setAlignment(Qt::AlignRight);
-
-        QDateTimeAxis *axisX = new QDateTimeAxis;
-        axisX->setTitleText("Время");
-        axisX->setTickCount(10);
-        if(days==1) axisX->setFormat("hh:mm");
-        else axisX->setFormat("dd-MM hh:mm");
-        chargeChart->addAxis(axisX,Qt::AlignBottom);
-
-        QDateTimeAxis *axisXi = new QDateTimeAxis;
-        axisXi->setTitleText("Время");
-        axisXi->setTickCount(10);
-        if(days==1) axisXi->setFormat("hh:mm");
-        else axisXi->setFormat("dd-MM hh:mm");
-        icmChart->addAxis(axisXi,Qt::AlignBottom);
-
-        QValueAxis *axisY = new QValueAxis();
-        axisY->setTitleText("Загрузка(%)");
-        axisY->setRange(0,100);
-        chargeChart->addAxis(axisY, Qt::AlignLeft);
-
-        QValueAxis *axisYi = new QValueAxis();
-        axisYi->setTitleText("Интерференция");
-        axisYi->setRange(0,5);
-        axisYi->setTickCount(6);
-        icmChart->addAxis(axisYi, Qt::AlignLeft);
-
-        for(int i=0;i<cells2G.size();i++)
-        {
-             QLineSeries *tmpSeries = new QLineSeries();
-             tmpSeries->setName(cells2G[i].cellName);
-             QLineSeries *tmpSeriesi = new QLineSeries();
-             tmpSeriesi->setName(cells2G[i].cellName);
-             tmpSeries->setOpacity(0.2);
-             loadSeriesV.push_back(tmpSeries);
-             for(int j=0;j<cells2G[i].dates.size();j++)
-             {
-
-                 tmpSeries->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].charges[j]);
-                 tmpSeriesi->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].inter[j]);
-             }
-             chargeChart->addSeries(tmpSeries);
-             icmChart->addSeries(tmpSeriesi);
-             tmpSeries->attachAxis(axisX);
-             tmpSeries->attachAxis(axisY);
-             tmpSeriesi->attachAxis(axisXi);
-             tmpSeriesi->attachAxis(axisYi);
-        }
-
-        QChartView *chartView = new QChartView(chargeChart);
-        chartView->setRenderHint(QPainter::Antialiasing);
-        QChartView *chartViewi = new QChartView(icmChart);
-        chartViewi->setRenderHint(QPainter::Antialiasing);
-        tabWidget->addTab(chartView,"Загрузка");
-        tabWidget->addTab(chartViewi,"Интерфернция");
-        chartsLayout->addWidget(tabWidget);
+        sepChartClass->moveToThread(threadToSQLDatabase);
+        connect(threadToSQLDatabase,&QThread::started,sepChartClass,&ChartBySeparateThread::getChargeOf2GCellsFromMySQL);
+        connect(sepChartClass,&ChartBySeparateThread::finished,this,&AnalyseData::storeResult);
+        threadToSQLDatabase->start();
     }
 
     QMenuBar *bar = new QMenuBar(this);
@@ -227,42 +131,12 @@ void AnalyseData::setCommands(int value)
 void AnalyseData::showSettingsWidget()
 {
     Settings a;
-    a.exec();
-}
-
-QVector<cell2G> AnalyseData::getChargeOf2GCellsFromMySQL(QVector<QString> cells, int days)
-{
-    QVector<cell2G> result(cells.size());
-    if(days == 0)
+    auto result = a.exec();
+    if(result == QDialog::Accepted)
     {
-        result.clear();
-        return result;
+        for(int i=0;i<customSlices.size();i++)
+            customSlices[i]->loadSettings();
     }
-
-    if(openLocalDataBase())
-    {
-        QSqlQueryModel *chargeModel = new QSqlQueryModel;
-        QString query;
-        for(int i=0;i<cells.size();i++)
-        {
-            query = "select TCH,SPEECH,GPRS,TIME,INTERFERENCE from bscrecords where RBS='"+cells[i].left(6)+"' and CELLNAME = '"+cells[i].right(1)+"' and TIME between '"+QDateTime::currentDateTime().addDays(days).toString(Qt::ISODate)
-                    +"' and '"+QDateTime::currentDateTime().toString(Qt::ISODate)+"'";
-            chargeModel->setQuery(query,mysqldataBase);
-            cell2G tmp;
-            tmp.cellName = cells[i];
-            for(int j=0;j<chargeModel->rowCount();j++)
-            {
-                tmp.dates.push_back(QDateTime::fromString(chargeModel->data(chargeModel->index(j,3)).toString(),Qt::ISODate));
-                tmp.charges.push_back(((chargeModel->index(j,1).data().toFloat()+chargeModel->index(j,2).data().toFloat()) / chargeModel->index(j,0).data().toFloat())*100.0);
-                tmp.inter.push_back(chargeModel->index(j,4).data().toInt());
-            }
-            result[i] = tmp;
-        }
-        delete chargeModel;
-        mysqldataBase.close();
-    }
-
-    return result;
 }
 
 void AnalyseData::ShowLoad(QString cell)
@@ -273,12 +147,164 @@ void AnalyseData::ShowLoad(QString cell)
          if(loadSeriesV[i]->name() == cell)
          {
              loadSeriesV[i]->setOpacity(1);
+             interSeries[i]->setOpacity(1);
          }
          else
          {
+             interSeries[i]->setOpacity(0.2);
              loadSeriesV[i]->setOpacity(0.2);
          }
      }
+}
+
+QChartView *AnalyseData::buildPieChart()
+{
+    QFont font;
+    font.setBold(true);
+    font.setPixelSize(14);
+
+    QChart *pieChart = new QChart;
+    pieChart->legend()->setAlignment(Qt::AlignRight);
+    pieChart->setTitle("Частотный анализ секторов");
+    pieChart->setAnimationOptions(QChart::AllAnimations);
+
+
+    QPieSeries *pieSeries = new QPieSeries();
+    int Size = 0;
+    for(int i=0;i<chastoti.size();i++)
+        Size+=chastoti[i].second;
+
+
+    for(int i=0;i<chastoti.size();i++)
+        for(int j=0;j<chastoti.size()-1;j++)
+            if(chastoti[j].second<chastoti[j+1].second) swap(chastoti[j],chastoti[j+1]);
+
+
+    CustomSlice *slice;
+
+    for(int i=0;i<chastoti.size() && i < 20;i++)
+    {
+        slice = new CustomSlice(chastoti[i].first,chastoti[i].second);
+        customSlices.push_back(slice);
+        connect(slice,&CustomSlice::sliceHovered,this,&AnalyseData::ShowLoad);
+        slice->setLabelFont(font);
+        *pieSeries << slice;
+
+    }
+    pieChart->addSeries(pieSeries);
+    pieSeries->setLabelsVisible(true);
+
+    QChartView *chartView = new QChartView();
+    chartView->setRenderHint(QPainter::Antialiasing);
+    chartView->setChart(pieChart);
+    pieChart->setTitleFont(font);
+    pieChart->legend()->setFont(font);
+    pieChart->setFont(font);
+
+    return chartView;
+}
+
+QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
+{
+    QFont font;
+    font.setBold(true);
+    font.setPixelSize(14);
+
+    QTabWidget *tabWidget = new QTabWidget();
+    QChart *icmChart = new QChart();
+    QChart *chargeChart = new QChart();
+    chargeChart->setFont(font);
+    chargeChart->setTitleFont(font);
+    chargeChart->legend()->setFont(font);
+    icmChart->setFont(font);
+    icmChart->setTitleFont(font);
+    icmChart->legend()->setFont(font);
+
+    if(days==1)
+        chargeChart->setTitle("График нагрузки на сектора 2G за последние сутки,\nс которых звонил абонент");
+    else chargeChart->setTitle("График нагрузки на сектора 2G за последнюю неделю,\nс которых звонил абонент");
+    chargeChart->setAnimationOptions(QChart::SeriesAnimations);
+    chargeChart->legend()->setAlignment(Qt::AlignRight);
+    icmChart->setTitle("Интерференция на данных секторах");
+    icmChart->setAnimationOptions(QChart::SeriesAnimations);
+    icmChart->legend()->setAlignment(Qt::AlignRight);
+
+    QDateTimeAxis *axisX = new QDateTimeAxis;
+    axisX->setTitleText("Время");
+    axisX->setTickCount(10);
+    if(days==1) axisX->setFormat("hh:mm");
+    else axisX->setFormat("dd-MM hh:mm");
+    chargeChart->addAxis(axisX,Qt::AlignBottom);
+
+    QDateTimeAxis *axisXi = new QDateTimeAxis;
+    axisXi->setTitleText("Время");
+    axisXi->setTickCount(10);
+    if(days==1) axisXi->setFormat("hh:mm");
+    else axisXi->setFormat("dd-MM hh:mm");
+    icmChart->addAxis(axisXi,Qt::AlignBottom);
+
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setTitleText("Загрузка(%)");
+    axisY->setRange(0,100);
+    chargeChart->addAxis(axisY, Qt::AlignLeft);
+
+    QValueAxis *axisYi = new QValueAxis();
+    axisYi->setTitleText("Интерференция");
+    axisYi->setRange(0,5);
+    axisYi->setTickCount(6);
+    icmChart->addAxis(axisYi, Qt::AlignLeft);
+
+    for(int i=0;i<cells2G.size();i++)
+    {
+         QLineSeries *tmpSeries = new QLineSeries();
+         tmpSeries->setName(cells2G[i].cellName);
+         QLineSeries *tmpSeriesi = new QLineSeries();
+         tmpSeriesi->setName(cells2G[i].cellName);
+         loadSeriesV.push_back(tmpSeries);
+         interSeries.push_back(tmpSeriesi);
+         for(int j=0;j<cells2G[i].dates.size();j++)
+         {
+
+             tmpSeries->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].charges[j]);
+             tmpSeriesi->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].inter[j]);
+         }
+         chargeChart->addSeries(tmpSeries);
+         icmChart->addSeries(tmpSeriesi);
+         tmpSeries->attachAxis(axisX);
+         tmpSeries->attachAxis(axisY);
+         tmpSeriesi->attachAxis(axisXi);
+         tmpSeriesi->attachAxis(axisYi);
+    }
+
+    QChartView *chartView = new QChartView(chargeChart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+    QChartView *chartViewi = new QChartView(icmChart);
+    chartViewi->setRenderHint(QPainter::Antialiasing);
+    tabWidget->addTab(chartView,"Загрузка");
+    tabWidget->addTab(chartViewi,"Интерфернция");
+    return tabWidget;
+}
+
+void AnalyseData::storeResult()
+{
+    returnedData = sepChartClass->returneD;
+    repaintModel();
+}
+
+void AnalyseData::repaintModel()
+{
+
+    chartsLayout->removeWidget(label);
+    chartsLayout->addWidget(buildLineCharts(returnedData));
+    delete sepChartClass;
+    threadToSQLDatabase->quit();
+    timer->stop();
+
+}
+
+void AnalyseData::changeText()
+{
+    label->setText(label->text()+'.');
 }
 
 void AnalyseData::xCopy(bool b)
@@ -293,19 +319,6 @@ void AnalyseData::swap(QPair<QString,int> &a,QPair<QString,int> &b)
     tmp = a;
     a = b;
     b = tmp;
-}
-
-bool AnalyseData::openLocalDataBase()
-{
-    QSqlDatabase::contains("QMYSQL_detail_connection") ? mysqldataBase = QSqlDatabase::database("QMYSQL_detail_connection") :
-            mysqldataBase = QSqlDatabase::addDatabase("QMYSQL","QMYSQL_detail_connection");
-    mysqldataBase.setPort(settings->getSettigns("mainForm/mySqlPort").toInt());
-    mysqldataBase.setHostName(settings->getSettigns("mainForm/mySqlHost").toString());
-    mysqldataBase.setDatabaseName(settings->getSettigns("mainForm/mysqlDatabaseName").toString());
-    mysqldataBase.setUserName(settings->getSettigns("mainForm/mySqlUserName").toString());
-    mysqldataBase.setPassword(settings->getSettigns("mainForm/mySqlPassword").toString());
-    mysqldataBase.open();
-    return mysqldataBase.isOpen();
 }
 
 void AnalyseData::updateWindowWidgets()
