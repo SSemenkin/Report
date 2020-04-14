@@ -20,6 +20,8 @@
 #include <QAbstractItemModel>
 #include <QKeyEvent>
 #include <QThread>
+#include <QMap>
+#include <QSortFilterProxyModel>
 #include "xlsxdocument.h"
 
 
@@ -90,8 +92,6 @@ private slots:
 
     void on_pastePB_clicked();
 
-    void onTableCopy(QModelIndex index);
-
     void on_cellStat_clicked();
 
     void abonentAnalyse(int);
@@ -103,6 +103,12 @@ private slots:
     void openDatabaseEDR();
 
     void execAnalyseWithLoadChart();
+
+    void on_chartButton_customContextMenuRequested(const QPoint &pos);
+
+    void actionChartButtonTriggered();
+
+    QString calculateFrequnces();
 
 private:
 
@@ -139,7 +145,9 @@ private:
 
     QString toOneString(QStringList list,QString separator = "\n");
 
-    QAction *actionSimple,*actionDay,*actionWeek;
+    QAction *actionDay,*actionWeek;
+
+    QMenu *customMenu;
 
 };
 

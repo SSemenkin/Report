@@ -2,7 +2,14 @@
 
 AnalyseData::~AnalyseData()
 {
-
+    delete settings;
+    delete globalLay;
+    delete chartsLayout;
+    delete hideModel;
+    delete label;
+    delete timer;
+    delete dataBar;
+    delete threadToSQLDatabase;
 }
 
 AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates,int actionValue)
@@ -15,7 +22,9 @@ AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates,int
     interval = dates;
     days = abs(actionValue);
     timer = new QTimer();
-    label = new QLabel("Получение данных о загрузке...");
+    label = new QLabel("Получение данных с сервера.");
+    dataBar = new QProgressBar();
+    threadToSQLDatabase = new QThread();
     updateWindowWidgets();
     if(!actionValue)
     {
@@ -34,6 +43,15 @@ AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates,int
 void AnalyseData::GenerateChart()
 {
 
+    QMenuBar *bar = new QMenuBar(this);
+    QMenu *menu = new QMenu("Настройки");
+    bar->addMenu(menu);
+    QAction *action = new QAction("Настройки подключения к BSC",this);
+    menu->addAction(action);
+    connect(action,&QAction::triggered,this,&AnalyseData::showSettingsWidget);
+    globalLay->addWidget(bar);
+    globalLay->addLayout(chartsLayout);
+
     lb = new QTextEdit;
     lb->setFixedHeight(100);
     QFont font;
@@ -47,29 +65,24 @@ void AnalyseData::GenerateChart()
     }
     if(days!=0)
     {
-        chartsLayout->addWidget(label);
-        timer->setInterval(500);
+        globalLay->addWidget(label);
+        globalLay->addWidget(dataBar);
+        timer->setInterval(1000);
         connect(timer,&QTimer::timeout,this,&AnalyseData::changeText);
         timer->start();
-        threadToSQLDatabase = new QThread();
         sepChartClass = new ChartBySeparateThread();
         sepChartClass->cells = cells;
         sepChartClass->days = days;
 
         sepChartClass->moveToThread(threadToSQLDatabase);
+        if(QSqlDatabase::contains("QMYSQL_detail_connection")) QSqlDatabase::removeDatabase("QMYSQL_detail_connection");
         connect(threadToSQLDatabase,&QThread::started,sepChartClass,&ChartBySeparateThread::getChargeOf2GCellsFromMySQL);
+        connect(sepChartClass,&ChartBySeparateThread::dataRecieved,dataBar,&QProgressBar::setValue);
         connect(sepChartClass,&ChartBySeparateThread::finished,this,&AnalyseData::storeResult);
         threadToSQLDatabase->start();
     }
 
-    QMenuBar *bar = new QMenuBar(this);
-    QMenu *menu = new QMenu("Настройки");
-    bar->addMenu(menu);
-    QAction *action = new QAction("Настройки подключения к BSC",this);
-    menu->addAction(action);
-    connect(action,&QAction::triggered,this,&AnalyseData::showSettingsWidget);
-    globalLay->addWidget(bar);
-    globalLay->addLayout(chartsLayout);
+
 
     QHBoxLayout  *hbox = new QHBoxLayout;
 
@@ -117,14 +130,14 @@ void AnalyseData::setCommands(int value)
     if(ch2G->isChecked())
     {
         for(int i=0;i<chastoti.size();i++)
-            if(chastoti[i].first[0]!='3')
+            if(chastoti[i].first[0]!='(')
                 lb->setText(lb->toPlainText()+"rlcrp:cell="+chastoti[i].first+";\n");
     }
     if(ch3G->isChecked())
     {
         for(int i=0;i<chastoti.size();i++)
-            if(chastoti[i].first[0]=='3')
-                lb->setText(lb->toPlainText()+"DSP UCELLCHK: CHECKSCOPE=CELLID, CellId="+chastoti[i].first.right(7).left(5)+";\n");
+            if(chastoti[i].first[0]=='(')
+                lb->setText(lb->toPlainText()+"DSP UCELLCHK: CHECKSCOPE=CELLID, CellId="+chastoti[i].first.right(5)+";\n");
     }
 }
 
@@ -222,11 +235,11 @@ QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
 
     if(days==1)
         chargeChart->setTitle("График нагрузки на сектора 2G за последние сутки,\nс которых звонил абонент");
-    else chargeChart->setTitle("График нагрузки на сектора 2G за последнюю неделю,\nс которых звонил абонент");
+    else chargeChart->setTitle("График нагрузки на сектора 2G за последние "+QString::number(abs(days))+ " суток,\nс которых звонил абонент");
     chargeChart->setAnimationOptions(QChart::SeriesAnimations);
     chargeChart->legend()->setAlignment(Qt::AlignRight);
     icmChart->setTitle("Интерференция на данных секторах");
-    icmChart->setAnimationOptions(QChart::SeriesAnimations);
+    icmChart->setAnimationOptions(QChart::AllAnimations);
     icmChart->legend()->setAlignment(Qt::AlignRight);
 
     QDateTimeAxis *axisX = new QDateTimeAxis;
@@ -293,8 +306,8 @@ void AnalyseData::storeResult()
 
 void AnalyseData::repaintModel()
 {
-
-    chartsLayout->removeWidget(label);
+    label->setVisible(false);
+    dataBar->setVisible(false);
     chartsLayout->addWidget(buildLineCharts(returnedData));
     delete sepChartClass;
     threadToSQLDatabase->quit();
@@ -304,7 +317,18 @@ void AnalyseData::repaintModel()
 
 void AnalyseData::changeText()
 {
-    label->setText(label->text()+'.');
+    if(label->text().right(3) == "ра.")
+    {
+        label->setText(label->text()+'.');
+    }
+    else if(label->text().right(3) == "а..")
+    {
+        label->setText(label->text()+'.');
+    }
+    else
+    {
+       label->setText(label->text().left(label->text().length()-2));
+    }
 }
 
 void AnalyseData::xCopy(bool b)

@@ -9,7 +9,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     settings = new Settings();
     edr_model = new QSqlQueryModel();
-
     onStart();
     DbConnect();
     AbonentSelected = false;
@@ -21,9 +20,19 @@ MainWindow::~MainWindow()
     QStringList a = db.connectionNames();
     for(int i = 0; i < a.size() ;i++)
     {
-        db = QSqlDatabase::database(a[i]);
-        db.close();
+        if(a[i]!="QMYSQL_detail_connection")
+        {
+            db = QSqlDatabase::database(a[i]);
+            db.close();
+        }
     }
+    delete completer;
+    delete abonentLine;
+    delete IMEI;
+    delete customMenu;
+    delete actionDay;
+    delete actionWeek;
+    delete model;
     delete edr_model;
     delete settings;
     delete ui;
@@ -58,7 +67,7 @@ QString MainWindow::getDatesToChart()
 void MainWindow::onStart()
 { 
     ui->driverCombo->addItems({"QPSQL","QMYSQL"});
-    completer = new QCompleter(sql.split("\r\n"),this);
+    completer = new QCompleter(sql.toLower().split("\r\n"),this);
     //completer->setModel(modelFromFile("wordlist.txt"));
     //completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
     completer->setCaseSensitivity(Qt::CaseInsensitive);
@@ -110,7 +119,8 @@ void MainWindow::onStart()
     ui->showData->setIcon(QIcon(":/images/show.png"));
     ui->pushButton->setIcon(QIcon(":/images/save.png"));
     ui->connect->setIcon(QIcon(":/images/connect.png"));
-    ui->analyseDataButton->setIcon(QIcon(":/images/cahrt.png"));
+    ui->analyseDataButton->setIcon(QIcon(":/images/PieChart.png"));
+    ui->chartButton->setIcon(QIcon(":/images/chart.png"));
     ui->pushButton_5->setIcon(QIcon(":/images/help.png"));
     ui->asc->setIcon(QIcon(":/images/asc.png"));
     ui->desc->setIcon(QIcon(":/images/desc.png"));
@@ -118,6 +128,7 @@ void MainWindow::onStart()
     ui->outgoing->setIcon(QIcon(":/images/outgoing.png"));
     ui->all_calls->setIcon(QIcon(":/images/all_calls.png"));
     ui->cellStat->setIcon(QIcon(":/images/cell.png"));
+    ui->verticalLayout_4->setAlignment(ui->saveToFile,Qt::AlignLeft);
 
     ui->radioButton->setChecked(true);
     ui->outgoing->setToolTip("Указывать номер нужно в формате 72XXXXXXX");
@@ -170,6 +181,16 @@ void MainWindow::onStart()
     ui->groupBox_2->setFixedWidth(850);
     ui->groupBox->setAlignment(Qt::AlignLeft);
     ui->groupBox_6->setAlignment(Qt::AlignLeft);
+    //chart Button and context menu
+    ui->chartButton->setContextMenuPolicy(Qt::CustomContextMenu);
+    actionDay = new QAction("Данные загрузки за 3 дня");
+    actionWeek = new QAction("Данные загрзуки за неделю");
+    customMenu = new QMenu(this);
+    customMenu->addAction(actionDay);
+    customMenu->addAction(actionWeek);
+    connect(actionDay,&QAction::triggered,this,&MainWindow::actionChartButtonTriggered);
+    connect(actionWeek,&QAction::triggered,this,&MainWindow::actionChartButtonTriggered);
+    // over
     this->showMaximized();
 }
 
@@ -227,7 +248,12 @@ void MainWindow::on_showData_clicked()
         QString request = "select datecharge,eventidentity,result,radiotype,typerau,intrarautype"
                           ",gsmcause,discreason,rai,cellidorsai,sac,msisdn,imsi,ptmsi,hlrnumber,sizeapn,apn,oldrai,negotiatedqos  from edr where msisdn = '380"+abonentLine->text()+"'";
         edr_model->setQuery(request,dataBaseEDR);
-        ui->tableViewEDR->setModel(edr_model);
+
+        QSortFilterProxyModel *sortedModel = new QSortFilterProxyModel(this);
+        sortedModel->setDynamicSortFilter(true);
+        sortedModel->setSourceModel(edr_model);
+
+        ui->tableViewEDR->setModel(sortedModel);
         ui->tableViewEDR->resizeRowsToContents();
         ui->tableViewEDR->resizeColumnsToContents();
     }
@@ -640,7 +666,12 @@ void MainWindow::on_pushButton_2_clicked()
         ui->statusBar->showMessage(query_model->lastError().text());
       else if(query_model->query().isSelect()){
         ui->statusBar->showMessage("Query Ok.");
-         ui->tableViewQuery->setModel(query_model);
+
+        QSortFilterProxyModel *sortedModel = new QSortFilterProxyModel(this);
+        sortedModel->setDynamicSortFilter(true);
+        sortedModel->setSourceModel(query_model);
+
+         ui->tableViewQuery->setModel(sortedModel);
         }
       else {
           ui->statusBar->showMessage(tr("Query OK, number of affected rows: %1").arg(
@@ -684,8 +715,10 @@ void MainWindow::GetTime()
 
 void MainWindow::SetModel(QString request)
 {
-
-    ui->tableView->setModel(model);
+    QSortFilterProxyModel *sortedModel = new QSortFilterProxyModel(this);
+    sortedModel->setDynamicSortFilter(true);
+    sortedModel->setSourceModel(model);
+    ui->tableView->setModel(sortedModel);
     ui->label_7->setText("Строк(Вызовов): "+QString::number(model->rowCount()));
     ui->tableView->resizeColumnsToContents();
     ui->tableViewEDR->resizeRowsToContents();
@@ -901,8 +934,11 @@ void MainWindow::on_pushButton_5_clicked()
 {
     if(db.isOpen())
     {
+        QApplication::setOverrideCursor(Qt::WaitCursor);
         QString request = "select distinct dateForStartOfCharge from cdr order by dateForStartOfCharge";
-        ui->driverCombo->currentText()== "QMYSQL" ? request.replace("mss","cdr") : request.replace("cdr","mss");
+        if(ui->driverCombo->currentText() == "QPSQL")
+            request = "SELECT \"dateforstartofcharge\" "
+                    "FROM \"mss\" GROUP BY \"dateforstartofcharge\" ORDER BY \"dateforstartofcharge\"";
         model->setQuery(request,db);
         ui->tableView->setModel(model);
         ui->tableView->resizeColumnsToContents();
@@ -911,6 +947,7 @@ void MainWindow::on_pushButton_5_clicked()
         ui->tabWidget->setCurrentIndex(0);
         ui->analyseDataButton->setEnabled(false);
         ui->chartButton->setEnabled(false);
+        QApplication::setOverrideCursor(Qt::ArrowCursor);
     }
     else QMessageBox::critical(this,"Ошибка подключения","Откройте БД/Подключитесь к ней");
 
@@ -935,11 +972,6 @@ void MainWindow::on_pastePB_clicked()
     }
 }
 
-void MainWindow::onTableCopy(QModelIndex index)
-{
-    QApplication::clipboard()->setText(model->data(index).toString());
-}
-
 void MainWindow::on_cellStat_clicked()
 {
     CallStat a;
@@ -956,6 +988,7 @@ void MainWindow::abonentAnalyse(int analyseColumn)
         ui->duration->setVisible(false);
         ui->favoriteNumber->setVisible(false);
         ui->line_2->setVisible(false);
+        ui->tableView->setToolTip("");
         return;
     }
     else
@@ -967,6 +1000,7 @@ void MainWindow::abonentAnalyse(int analyseColumn)
 
     while(model->canFetchMore()) model->fetchMore();
 
+    ui->tableView->setToolTip(calculateFrequnces());
     double temporarySum = 0;
     QVector<QPair<QString,int>> pairVector;
     for(int i=0;i<model->rowCount();i++)
@@ -1109,7 +1143,93 @@ void MainWindow::execAnalyseWithLoadChart()
 {
     if(model->rowCount()>0)
     {
-        analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),-3);
+        analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),1);
     }
     else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
+}
+
+void MainWindow::on_chartButton_customContextMenuRequested(const QPoint &pos)
+{
+    customMenu->popup(ui->chartButton->mapToGlobal(pos));
+}
+
+void MainWindow::actionChartButtonTriggered()
+{
+    QAction *action = qobject_cast<QAction *> (sender());
+
+    if(action == actionDay)
+    {
+        if(model->rowCount()>0)
+        {
+            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),3);
+        }
+        else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
+    }
+    else if(action == actionWeek)
+    {
+        if(model->rowCount()>0)
+        {
+            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),7);
+        }
+        else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
+    }
+    else QMessageBox::information(this,"Info","how???");
+}
+
+QString MainWindow::calculateFrequnces()
+{
+    QString result = "Частоты LAC \n";
+    int indexLACfirst = 0,indexLACsecond = 0;
+    for(int i=0;i<model->columnCount();i++)
+    {
+        if(model->headerData(i,Qt::Horizontal).toString().toLower() == "firstcallinglac")
+            indexLACfirst = i;
+        if(model->headerData(i,Qt::Horizontal).toString().toLower() == "lastcallinglac")
+            indexLACsecond = i;
+    }
+
+    QMap<QString,int> frequences;
+
+    for(int i=0;i<model->rowCount();i++)
+    {
+        frequences[model->index(i,indexLACfirst).data().toString()]++;
+        frequences[model->index(i,indexLACsecond).data().toString()]++;
+    }
+
+    for(QMap<QString,int>::iterator it = frequences.begin();it!=frequences.end();++it)
+    {
+        result += it.key();
+        if(it.key()=="62130")
+        {
+            result+="(Луганск,Славяносербск,Молодогвардейск,Лутугино - 2G)";
+        }
+        else if(it.key()=="50331")
+        {
+          result+="(Луганск-3G)";
+        }
+        else if(it.key()=="62071")
+        {
+            result+="(Алчевск,Первомайск,Кировск,Брянка,Стаханов - 2G)";
+        }
+        else if(it.key()=="62626")
+        {
+            result+="(Свердловск,Ровеньки,Антрацит,Краснопартизанск,Красный Луч - 2G)";
+        }
+        else if(it.key()=="62500")
+        {
+            result+="(Краснодон - 2G)";
+        }
+        else if(it.key()=="50333")
+        {
+            result+="(Антрацит-3G)";
+        }
+        else
+        {
+            result+="(UnknownRegion)";
+        }
+        result +=':'+QString::number(it.value())+'\n';
+
+    }
+
+    return result;
 }

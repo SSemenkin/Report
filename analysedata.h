@@ -25,6 +25,7 @@
 #include <QTabWidget>
 #include <QThread>
 #include <QTimer>
+#include <QProgressBar>
 
 #include "customslice.h"
 #include "settings.h"
@@ -37,6 +38,8 @@ QT_CHARTS_USE_NAMESPACE
 class AnalyseData:public QWidget
 {
     Q_OBJECT
+
+
 
 public:
 
@@ -75,6 +78,7 @@ private slots:
 
 private:
 
+
     QSqlQueryModel *hideModel;
     QString currAbon,interval;
 
@@ -106,7 +110,11 @@ private:
 
     QLabel *label;
 
+    QProgressBar *dataBar;
+
     QTimer *timer;
+
+    QVBoxLayout *tmpLay;
 
 };
 

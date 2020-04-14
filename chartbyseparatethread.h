@@ -41,6 +41,8 @@ signals:
 
     void finished();
 
+    void dataRecieved(int);
+
 private:
 
     bool openLocalDataBase();
@@ -49,7 +51,6 @@ private:
     QSqlDatabase mysqldataBase;
 
     Settings *settings;
-
 
 
 

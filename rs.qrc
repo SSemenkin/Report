@@ -5,7 +5,6 @@
         <file>images/allTime.png</file>
         <file>images/asc.png</file>
         <file>images/brba.png</file>
-        <file>images/cahrt.png</file>
         <file>images/cdr.png</file>
         <file>images/cdr2.png</file>
         <file>images/clear-symbol.png</file>
@@ -33,5 +32,6 @@
         <file>images/main.ico</file>
         <file>images/PieChart.png</file>
         <file>images/week.png</file>
+        <file>images/chart.png</file>
     </qresource>
 </RCC>

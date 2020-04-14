@@ -37,10 +37,7 @@ CustomSlice::CustomSlice(QString label, qreal value)
 
     loadSettings();
 
-    if(this->value()>2)
-        setLabelPosition(LabelInsideNormal);
-    else setLabelPosition(LabelOutside);
-
+    setLabelPosition(LabelInsideNormal);
 
     int red = rand()%256;
     int green = rand()%256;
@@ -75,10 +72,12 @@ void CustomSlice::showHighlight(bool show)
         brush.setColor(QColor(0, 250, 154));
         setExploded();
         setBrush(brush);
+        if(value()<2.5) setLabelPosition(LabelOutside);
         emit sliceHovered(label());
     } else {
         setBrush(m_originalBrush);
         setExploded(false);
+        if(value()<2.5) setLabelPosition(LabelInsideNormal);
     }
 }
 
@@ -99,9 +98,7 @@ void CustomSlice::getData()
     }
     else
     {
-        LoadStateCheck *ex = new LoadStateCheck("tmp");
-        ex->setWindowFlag(Qt::WindowStaysOnTopHint);
-        QMessageBox::information(ex,"Информация","К сожалению мы не реализовали\nданную функицю, но\nможет быть в дальнейшем\nмы сделаем такую функцию\nи для сети 3G");
+        QMessageBox::information(nullptr,"Информация","К сожалению нашей команде не удалось\nреализовать данную функцию для сети 3G\n‿︵‿ヽ(°□° )ノ︵‿︵\nПриносим свои извинения");
         return;
     }
 
@@ -124,6 +121,7 @@ void CustomSlice::readData() //Telnet Connection
 {
 
     QString all = socket->readAll();
+    //qDebug() << all;
     if(subString(all,"login"))
     {
         QString command = Login+"\r\n";
@@ -152,7 +150,7 @@ void CustomSlice::readData() //Telnet Connection
         QString command = "mml -a\r\n";
         socket->write(command.toLatin1());
     }
-    else if(all.left(2)=="WO")
+    else if(all.left(2)=="WO" || all.left(4) == "EX-A")
     {
         QString command = "rlcrp:cell="+cell+";\r\n";
         socket->write(command.toLatin1());
@@ -187,7 +185,7 @@ void CustomSlice::readData() //Telnet Connection
     else if(is_msp_print)
     {
         msp_print+=all;
-        if(subString(all,"END") || subString(all,"u0003<"))
+        if(subString(all,"END") || subString(all,"u0003<") || all.right(6) == "u0003<")
         {
             QFile file;
             file.setFileName(cell+"-msp.txt");

@@ -11,7 +11,6 @@ win32:{
     VERSION = 1.0.0
     QMAKE_TARGET_COMPANY = "Smena LTD."
     QMAKE_TARGET_PRODUCT = "CDR/EDR Report"
-    QMAKE_TARGET_DESCRIPTION = "Working with CDR/EDR Database"
     QMAKE_TARGET_COPYRIGHT = "S.Semenkin"
 }
 

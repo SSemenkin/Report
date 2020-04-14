@@ -31,6 +31,7 @@ QVector<cell2G> ChartBySeparateThread::getChargeOf2GCellsFromMySQL()
         return result;
     }
 
+    emit dataRecieved(0);
     if(openLocalDataBase())
     {
         QSqlQueryModel *chargeModel = new QSqlQueryModel;
@@ -50,11 +51,13 @@ QVector<cell2G> ChartBySeparateThread::getChargeOf2GCellsFromMySQL()
                 tmp.inter.push_back(chargeModel->index(j,4).data().toInt());
             }
             result[i] = tmp;
+            emit dataRecieved((double(i)/double(cells.size())*100.0));
         }
+        emit dataRecieved(100);
         delete chargeModel;
         mysqldataBase.close();
-    }
 
+    }
     returneD = result;
 
     emit finished();

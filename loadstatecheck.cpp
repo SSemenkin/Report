@@ -83,7 +83,7 @@ bool LoadStateCheck::subString(QString buff, QString findStr)
 
 LoadStateCheck::~LoadStateCheck()
 {
-
+    delete this->layout();
 }
 
 void LoadStateCheck::makeModel( QStringList allTextCell,QString msp ,int all, int speech, int gprs)
