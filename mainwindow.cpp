@@ -161,6 +161,7 @@ void MainWindow::onStart()
 
     IMEI->setValidator(new QRegExpValidator(QRegExp("[0-9]{15}")));
     abonentLine->setValidator(new QRegExpValidator(QRegExp("[0-9]{15}")));
+    ui->port->setValidator(new QIntValidator());
 
     request_MN = requestBegin + " WHERE calledPartyNumber not like '380%"
                  "' and tag = '1' and calledPartyNumber not like '7%' and calledPartyNumber "
@@ -732,6 +733,7 @@ void MainWindow::on_connect_clicked()
 {
     QSqlDatabase::contains(ui->driverCombo->currentText()+"first_connection") ? db = QSqlDatabase::database(ui->driverCombo->currentText()+"first_connection") :
             db = QSqlDatabase::addDatabase(ui->driverCombo->currentText(),ui->driverCombo->currentText()+"first_connection");
+
     db.setHostName(ui->host->text());
     db.setPort(ui->port->text().toInt());
     db.setDatabaseName(ui->DBname->text());
@@ -1190,10 +1192,12 @@ QString MainWindow::calculateFrequnces()
 
     QMap<QString,int> frequences;
 
+
     for(int i=0;i<model->rowCount();i++)
     {
         frequences[model->index(i,indexLACfirst).data().toString()]++;
         frequences[model->index(i,indexLACsecond).data().toString()]++;
+
     }
 
     for(QMap<QString,int>::iterator it = frequences.begin();it!=frequences.end();++it)

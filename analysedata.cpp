@@ -306,13 +306,12 @@ void AnalyseData::storeResult()
 
 void AnalyseData::repaintModel()
 {
+    threadToSQLDatabase->quit();
+    delete sepChartClass;
+    timer->stop();
     label->setVisible(false);
     dataBar->setVisible(false);
     chartsLayout->addWidget(buildLineCharts(returnedData));
-    delete sepChartClass;
-    threadToSQLDatabase->quit();
-    timer->stop();
-
 }
 
 void AnalyseData::changeText()
