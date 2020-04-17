@@ -39,7 +39,7 @@ QVector<cell2G> ChartBySeparateThread::getChargeOf2GCellsFromMySQL()
         for(int i=0;i<cells.size();i++)
         {
             query = "select TCH,SPEECH,GPRS,TIME,INTERFERENCE from bscrecords where RBS='"+cells[i].left(6)+"' and CELLNAME = '"+cells[i].right(1)+"' and TIME between '"+QDateTime::currentDateTime().addDays(-days).toString(Qt::ISODate)
-                    +"' and '"+QDateTime::currentDateTime().toString(Qt::ISODate)+"'";
+                    +"' and '"+QDateTime::currentDateTime().toString(Qt::ISODate)+"' order by TIME";
             chargeModel->setQuery(query,mysqldataBase);
 
             cell2G tmp;

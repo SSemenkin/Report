@@ -27,7 +27,6 @@ void CallStat::onStart()
     this->setWindowIcon(QIcon(":/images/cell.png"));
     ui->pushButton->setIcon(QIcon(":/images/show.png"));
     ui->cell->setPlaceholderText("Укажите здесь CellID( Например: LUG001А , а написать нужно 11)");
-
 }
 
 void CallStat::on_pushButton_clicked()

@@ -16,7 +16,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-
     QStringList a = db.connectionNames();
     for(int i = 0; i < a.size() ;i++)
     {
@@ -66,6 +65,8 @@ QString MainWindow::getDatesToChart()
 
 void MainWindow::onStart()
 { 
+
+
     ui->driverCombo->addItems({"QPSQL","QMYSQL"});
     completer = new QCompleter(sql.toLower().split("\r\n"),this);
     //completer->setModel(modelFromFile("wordlist.txt"));
@@ -128,6 +129,8 @@ void MainWindow::onStart()
     ui->outgoing->setIcon(QIcon(":/images/outgoing.png"));
     ui->all_calls->setIcon(QIcon(":/images/all_calls.png"));
     ui->cellStat->setIcon(QIcon(":/images/cell.png"));
+
+
     ui->verticalLayout_4->setAlignment(ui->saveToFile,Qt::AlignLeft);
 
     ui->radioButton->setChecked(true);
@@ -136,7 +139,6 @@ void MainWindow::onStart()
     ui->all_calls->setToolTip("Указывать номер нужно в формате 72XXXXXXX");
     ui->query->setPlaceholderText("Напишите Sql запрос...");
     ui->pushButton_5->setToolTip("Отобразить даты, присутствующие в БД");
-    on_radioButton_2_clicked();
     requestBegin = "select tag,callingPartyNumber,calledPartyNumber,dateForStartOfCharge,timeForStartOfCharge,chargeableDuration,"
                    "callingSubscriberIMSI,callingSubscriberIMEI,firstCallingLAC,firstCallingCellID,lastCallingLAC,lastCallingCellID from mss";
 
@@ -182,6 +184,8 @@ void MainWindow::onStart()
     ui->groupBox_2->setFixedWidth(850);
     ui->groupBox->setAlignment(Qt::AlignLeft);
     ui->groupBox_6->setAlignment(Qt::AlignLeft);
+    ui->dateEdit_2->setVisible(false);
+    ui->dateEdit->setVisible(false);
     //chart Button and context menu
     ui->chartButton->setContextMenuPolicy(Qt::CustomContextMenu);
     actionDay = new QAction("Данные загрузки за 3 дня");
@@ -1236,4 +1240,9 @@ QString MainWindow::calculateFrequnces()
     }
 
     return result;
+}
+
+void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
+{
+    QApplication::clipboard()->setText(index.data().toString());
 }

@@ -110,6 +110,9 @@ private slots:
 
     QString calculateFrequnces();
 
+
+    void on_tableView_doubleClicked(const QModelIndex &index);
+
 private:
 
 

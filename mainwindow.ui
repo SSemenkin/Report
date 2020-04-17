@@ -10,6 +10,12 @@
     <height>952</height>
    </rect>
   </property>
+  <property name="sizeIncrement">
+   <size>
+    <width>1</width>
+    <height>1</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
@@ -143,31 +149,6 @@
          </item>
         </layout>
        </item>
-       <item row="3" column="2" colspan="2">
-        <widget class="QPushButton" name="connect">
-         <property name="styleSheet">
-          <string notr="true">padding:5px;
-padding-left:5px;
-padding-right:5px;</string>
-         </property>
-         <property name="text">
-          <string>Подключиться</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="2" colspan="2">
-        <spacer name="verticalSpacer_4">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
        <item row="0" column="3">
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
@@ -251,6 +232,34 @@ padding-right:5px;</string>
          </property>
         </widget>
        </item>
+       <item row="3" column="2" colspan="2">
+        <widget class="QPushButton" name="connect">
+         <property name="styleSheet">
+          <string notr="true">padding:5px;
+padding-left:5px;
+padding-right:5px;</string>
+         </property>
+         <property name="text">
+          <string>Подключиться</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2" colspan="2">
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
       </layout>
      </widget>
     </item>
@@ -289,7 +298,11 @@ padding-right:5px;</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_4">
           <item row="2" column="1">
-           <widget class="QComboBox" name="columnOrder"/>
+           <widget class="QComboBox" name="columnOrder">
+            <property name="editable">
+             <bool>false</bool>
+            </property>
+           </widget>
           </item>
           <item row="3" column="1">
            <widget class="QRadioButton" name="asc">
@@ -330,6 +343,15 @@ padding-right:5px;</string>
              <widget class="QPushButton" name="pastePB">
               <property name="text">
                <string/>
+              </property>
+              <property name="checkable">
+               <bool>false</bool>
+              </property>
+              <property name="autoRepeat">
+               <bool>false</bool>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -631,7 +653,11 @@ padding-right:5px;</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="1" column="2" colspan="2">
-           <widget class="QDateEdit" name="dateEdit"/>
+           <widget class="QDateEdit" name="dateEdit">
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item row="0" column="0">
            <widget class="QRadioButton" name="oneDay">
@@ -667,7 +693,23 @@ padding-right:5px;</string>
            </widget>
           </item>
           <item row="1" column="0" colspan="2">
-           <widget class="QDateEdit" name="dateEdit_2"/>
+           <widget class="QDateEdit" name="dateEdit_2">
+            <property name="autoFillBackground">
+             <bool>false</bool>
+            </property>
+            <property name="accelerated">
+             <bool>false</bool>
+            </property>
+            <property name="showGroupSeparator" stdset="0">
+             <bool>false</bool>
+            </property>
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+            <property name="timeSpec">
+             <enum>Qt::LocalTime</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -692,12 +734,49 @@ padding-right:5px;</string>
            <height>2000</height>
           </size>
          </property>
+         <property name="sizeIncrement">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="tabPosition">
+          <enum>QTabWidget::North</enum>
+         </property>
+         <property name="tabShape">
+          <enum>QTabWidget::Rounded</enum>
+         </property>
          <property name="currentIndex">
           <number>0</number>
          </property>
+         <property name="iconSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="documentMode">
+          <bool>false</bool>
+         </property>
+         <property name="tabsClosable">
+          <bool>false</bool>
+         </property>
+         <property name="movable">
+          <bool>true</bool>
+         </property>
+         <property name="tabBarAutoHide">
+          <bool>false</bool>
+         </property>
          <widget class="QWidget" name="tab">
+          <attribute name="icon">
+           <iconset resource="rs.qrc">
+            <normaloff>:/images/cdr_origin.png</normaloff>:/images/cdr_origin.png</iconset>
+          </attribute>
           <attribute name="title">
            <string>CDR</string>
+          </attribute>
+          <attribute name="toolTip">
+           <string>Данные о звонках</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_9">
            <item row="1" column="0">
@@ -728,8 +807,15 @@ padding-right:5px;</string>
           </layout>
          </widget>
          <widget class="QWidget" name="tab_3">
+          <attribute name="icon">
+           <iconset resource="rs.qrc">
+            <normaloff>:/images/edr_origin.png</normaloff>:/images/edr_origin.png</iconset>
+          </attribute>
           <attribute name="title">
            <string>EDR</string>
+          </attribute>
+          <attribute name="toolTip">
+           <string>Данные по пакетке</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_13">
            <item row="0" column="0">
@@ -745,8 +831,15 @@ padding-right:5px;</string>
           </layout>
          </widget>
          <widget class="QWidget" name="tab_2">
+          <attribute name="icon">
+           <iconset resource="rs.qrc">
+            <normaloff>:/images/sql.png</normaloff>:/images/sql.png</iconset>
+          </attribute>
           <attribute name="title">
            <string>SQL - запрос</string>
+          </attribute>
+          <attribute name="toolTip">
+           <string>Результат выполнения запроса</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_10">
            <item row="0" column="0">
@@ -987,6 +1080,8 @@ padding-right:5px;</string>
   <tabstop>tableViewQuery</tabstop>
   <tabstop>tableViewEDR</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="rs.qrc"/>
+ </resources>
  <connections/>
 </ui>
