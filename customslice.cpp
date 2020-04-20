@@ -72,14 +72,10 @@ void CustomSlice::showHighlight(bool show)
         brush.setColor(QColor(0, 250, 154));
         setExploded();
         setBrush(brush);
-        if(value()<2.5)
-            setLabelPosition(LabelOutside);
         emit sliceHovered(label());
     } else {
         setBrush(m_originalBrush);
-        setExploded(false);
-        if(value()<2.5)
-            setLabelPosition(LabelInsideNormal);
+        setExploded(false);   
     }
 }
 

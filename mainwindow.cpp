@@ -942,18 +942,66 @@ void MainWindow::on_pushButton_5_clicked()
     {
         QApplication::setOverrideCursor(Qt::WaitCursor);
         QString request = "select distinct dateForStartOfCharge from cdr order by dateForStartOfCharge";
-        if(ui->driverCombo->currentText() == "QPSQL")
-            request = "SELECT \"dateforstartofcharge\" "
-                    "FROM \"mss\" GROUP BY \"dateforstartofcharge\" ORDER BY \"dateforstartofcharge\"";
-        model->setQuery(request,db);
-        ui->tableView->setModel(model);
-        ui->tableView->resizeColumnsToContents();
-        ui->tableView->resizeColumnsToContents();
-        ui->tableView->resizeRowsToContents();
-        ui->tabWidget->setCurrentIndex(0);
-        ui->analyseDataButton->setEnabled(false);
-        ui->chartButton->setEnabled(false);
-        QApplication::setOverrideCursor(Qt::ArrowCursor);
+        if(ui->driverCombo->currentText() == "QPSQL" && ui->tabWidget->currentIndex() == 1)
+        {
+            QApplication::setOverrideCursor(Qt::ArrowCursor);
+            QMessageBox *messageBox = new QMessageBox(this);
+            messageBox->setText("Данная операция может занять много времени.\nВы уверены?");
+            messageBox->setStandardButtons(QMessageBox::Ok | QMessageBox::No);
+            int responce = messageBox->exec();
+            if(responce == 1024)
+            {
+                QApplication::setOverrideCursor(Qt::WaitCursor);
+                request = "SELECT distinct date_trunc('day',datecharge) FROM edr GROUP BY datecharge";
+
+                edr_model->setQuery(request,dataBaseEDR);
+                ui->tableViewEDR->setModel(edr_model);
+                ui->tableViewEDR->resizeColumnsToContents();
+                ui->tableViewEDR->resizeColumnsToContents();
+                ui->tableViewEDR->resizeRowsToContents();
+                ui->tabWidget->setCurrentIndex(1);
+                ui->analyseDataButton->setEnabled(false);
+                ui->chartButton->setEnabled(false);
+                QApplication::setOverrideCursor(Qt::ArrowCursor);
+            }
+
+        }
+        else if(ui->driverCombo->currentText() == "QPSQL" && ui->tabWidget->currentIndex() == 0)
+        {
+            QApplication::setOverrideCursor(Qt::ArrowCursor);
+            QMessageBox *messageBox = new QMessageBox(this);
+            messageBox->setText("Данная операция может занять много времени.\nВы уверены?");
+            messageBox->setStandardButtons(QMessageBox::Ok | QMessageBox::No);
+            int responce = messageBox->exec();
+            if(responce == 1024)
+            {
+                QApplication::setOverrideCursor(Qt::WaitCursor);
+                request = "SELECT \"dateforstartofcharge\" "
+                        "FROM \"mss\" GROUP BY \"dateforstartofcharge\" ORDER BY \"dateforstartofcharge\"";
+                model->setQuery(request,db);
+                ui->tableView->setModel(model);
+                ui->tableView->resizeColumnsToContents();
+                ui->tableView->resizeColumnsToContents();
+                ui->tableView->resizeRowsToContents();
+                ui->tabWidget->setCurrentIndex(0);
+                ui->analyseDataButton->setEnabled(false);
+                ui->chartButton->setEnabled(false);
+                QApplication::setOverrideCursor(Qt::ArrowCursor);
+            }
+
+        }
+        else
+        {
+            model->setQuery(request,db);
+            ui->tableView->setModel(model);
+            ui->tableView->resizeColumnsToContents();
+            ui->tableView->resizeColumnsToContents();
+            ui->tableView->resizeRowsToContents();
+            ui->tabWidget->setCurrentIndex(0);
+            ui->analyseDataButton->setEnabled(false);
+            ui->chartButton->setEnabled(false);
+            QApplication::setOverrideCursor(Qt::ArrowCursor);
+        }
     }
     else QMessageBox::critical(this,"Ошибка подключения","Откройте БД/Подключитесь к ней");
 

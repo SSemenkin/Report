@@ -201,6 +201,8 @@ QChartView *AnalyseData::buildPieChart()
         customSlices.push_back(slice);
         connect(slice,&CustomSlice::sliceHovered,this,&AnalyseData::ShowLoad);
         slice->setLabelFont(font);
+        if((double(chastoti[i].second) / double(Size) * 100.0) < 5.0 )
+            slice->setLabelPosition(QPieSlice::LabelOutside);
         *pieSeries << slice;
 
     }
