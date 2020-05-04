@@ -110,7 +110,6 @@ private slots:
 
     QString calculateFrequnces();
 
-
     void on_tableView_doubleClicked(const QModelIndex &index);
 
 private:
@@ -120,7 +119,7 @@ private:
 
     QSqlDatabase db,dataBaseEDR;
 
-     QAbstractItemModel *modelFromFile(const QString& fileName);
+    QAbstractItemModel *modelFromFile(const QString& fileName);
 
     QSqlQueryModel *model,*query_model;
 
@@ -150,7 +149,9 @@ private:
 
     QAction *actionDay,*actionWeek;
 
-    QMenu *customMenu;
+    QMenu *customMenu ;
+
+
 
 };
 

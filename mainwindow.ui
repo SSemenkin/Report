@@ -236,8 +236,10 @@
         <widget class="QPushButton" name="connect">
          <property name="styleSheet">
           <string notr="true">padding:5px;
+
 padding-left:5px;
-padding-right:5px;</string>
+padding-right:5px;
+</string>
          </property>
          <property name="text">
           <string>Подключиться</string>
@@ -581,7 +583,8 @@ padding-right:5px;</string>
             <item>
              <widget class="QComboBox" name="comboBox">
               <property name="styleSheet">
-               <string notr="true">border:1px solid grey;</string>
+               <string notr="true">border:1px solid grey;
+</string>
               </property>
              </widget>
             </item>
@@ -792,6 +795,9 @@ padding-right:5px;</string>
                <italic>false</italic>
                <bold>false</bold>
               </font>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::DefaultContextMenu</enum>
              </property>
              <property name="alternatingRowColors">
               <bool>true</bool>

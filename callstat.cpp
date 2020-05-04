@@ -65,8 +65,9 @@ void CallStat::on_pushButton_clicked()
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
     QSqlQueryModel *model = new QSqlQueryModel;
-    model->setQuery(getQuery(),dataBase);
-    qDebug() << getQuery();
+    if(driver == "QMYSQL")
+        model->setQuery(getQuery(),dataBase);
+    else model->setQuery(getQuery().replace("cdr","mss"),dataBase);
     ui->tableView->setModel(model);
 
     while(model->canFetchMore()) model->fetchMore();
@@ -124,7 +125,6 @@ QString CallStat::getQuery()
         if(ui->over->time().minute()<10) query+='0';
         query+=QString::number(ui->over->time().minute())+":00'";
     }
-    qDebug () << query;
     return query;
 }
 

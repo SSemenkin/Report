@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QStyleFactory>
 
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -10,6 +11,7 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName("Report");
     QApplication::setApplicationVersion("0.8.9");
     QApplication::setApplicationDisplayName("Report");
+
     MainWindow w;
     w.show();
 

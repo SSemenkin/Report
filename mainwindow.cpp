@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     onStart();
     DbConnect();
     AbonentSelected = false;
+
 }
 
 MainWindow::~MainWindow()
@@ -65,7 +66,6 @@ QString MainWindow::getDatesToChart()
 
 void MainWindow::onStart()
 { 
-
 
     ui->driverCombo->addItems({"QPSQL","QMYSQL"});
     completer = new QCompleter(sql.toLower().split("\r\n"),this);
@@ -137,7 +137,7 @@ void MainWindow::onStart()
     ui->outgoing->setToolTip("Указывать номер нужно в формате 72XXXXXXX");
     ui->incoming->setToolTip("Указывать номер нужно в формате 72XXXXXXX");
     ui->all_calls->setToolTip("Указывать номер нужно в формате 72XXXXXXX");
-    ui->query->setPlaceholderText("Напишите Sql запрос...");
+    ui->query->setPlaceholderText("Напишите SQL запрос...");
     ui->pushButton_5->setToolTip("Отобразить даты, присутствующие в БД");
     requestBegin = "select tag,callingPartyNumber,calledPartyNumber,dateForStartOfCharge,timeForStartOfCharge,chargeableDuration,"
                    "callingSubscriberIMSI,callingSubscriberIMEI,firstCallingLAC,firstCallingCellID,lastCallingLAC,lastCallingCellID from mss";
@@ -188,8 +188,8 @@ void MainWindow::onStart()
     ui->dateEdit->setVisible(false);
     //chart Button and context menu
     ui->chartButton->setContextMenuPolicy(Qt::CustomContextMenu);
-    actionDay = new QAction("Данные загрузки за 3 дня");
-    actionWeek = new QAction("Данные загрзуки за неделю");
+    actionDay = new QAction(QIcon(":/images/day.png"),"Данные загрузки за 3 дня");
+    actionWeek = new QAction(QIcon(":/images/week.png"),"Данные загрзуки за неделю");
     customMenu = new QMenu(this);
     customMenu->addAction(actionDay);
     customMenu->addAction(actionWeek);
@@ -247,7 +247,6 @@ void MainWindow::on_showData_clicked()
     ui->tabWidget->setCurrentWidget(ui->tab);
     QApplication::setOverrideCursor(Qt::WaitCursor);
     abonentAnalyse(-1);
-
     if(dataBaseEDR.isOpen() && ui->radioButton->isChecked())
     {
         QString request = "select datecharge,eventidentity,result,radiotype,typerau,intrarautype"
@@ -261,6 +260,9 @@ void MainWindow::on_showData_clicked()
         ui->tableViewEDR->setModel(sortedModel);
         ui->tableViewEDR->resizeRowsToContents();
         ui->tableViewEDR->resizeColumnsToContents();
+        ui->tableViewEDR->resizeRowsToContents();
+        ui->tableViewEDR->resizeColumnsToContents();
+
     }
 
     ui->statusBar->showMessage("");
@@ -268,7 +270,6 @@ void MainWindow::on_showData_clicked()
     {
         //Россия
         QString request = requestBegin +" where tag='1' and calledPartyNumber like '7%' "+DateB()+";";
-        qDebug() << request;
         model->setQuery(request,db);
         SetModel(request);
 
@@ -282,7 +283,6 @@ void MainWindow::on_showData_clicked()
                                          "and calledPartyNumber not like '3806446%' and calledPartyNumber not like '3806435%' "
                                          "and calledPartyNumber not like '3806432%' and calledPartyNumber not like '3806436%' and calledPartyNumber not like '3806455%' and calledPartyNumber not like '3806441%' "
                                          "and calledPartyNumber not like '3806433%' and calledPartyNumber not like '3806434%' and calledPartyNumber not like '3806444%' and calledPartyNumber not like '3806473%'  " +DateB()+";";
-         qDebug() << request;
         model->setQuery(request,db);
         SetModel(request);
 
@@ -296,7 +296,6 @@ void MainWindow::on_showData_clicked()
         request = request_MN +" "+DateB()+";";
 
         model->setQuery(request,db);
-        qDebug() << request;
 
         int calledIndex = 0;
         for(int i=0;i<model->columnCount();i++)
@@ -369,7 +368,7 @@ void MainWindow::on_showData_clicked()
        file.setFileName(filePath);
        file.open(QIODevice::WriteOnly);
        QTextStream out(&file);
-       qDebug() << Data.size();
+
        for(int i=0;i<Data.size();i++)
            out<< Data[i]<<"\r\n";
        file.close();
@@ -486,8 +485,8 @@ void MainWindow::on_showData_clicked()
 
         if(abonentLine->text().isEmpty())
         {
-            QMessageBox::information(this,"Информация","Введите номер");
             QApplication::setOverrideCursor(Qt::ArrowCursor);
+            QMessageBox::information(this,"Информация","Введите номер.");
             return;
         }
 
@@ -578,7 +577,7 @@ QString MainWindow::DateB()
     QString result;
     if(ui->chBoxEnableOrder->isChecked())
     {
-        result +=" order by "+ui->columnOrder->currentText()+" ";
+        result +=" order by "+ui->columnOrder->currentText()+",timeforstartofcharge ";
 
         ui->asc->isChecked() ? result+=" asc " :
                 result+=" desc ";
@@ -611,7 +610,7 @@ void MainWindow::on_pushButton_clicked()
             }
             if(path.right(3)=="csv")
             {
-                qDebug() << path;
+
                 QFile file;
                 file.setFileName(path);
                 file.open(QIODevice::WriteOnly);
@@ -818,6 +817,16 @@ void MainWindow::SaveToFile(QString a)
 
     QString fileNameXLSX = "results\\"+fileName+".xlsx";
     fileName = "results\\"+fileName+".csv";
+    if(ui->tabWidget->currentIndex() == 1)
+    {
+        fileName.replace(".csv","(EDR).csv");
+        fileNameXLSX.replace(".xlsx","(EDR).xlsx");
+    }
+    else
+    {
+        fileName.replace(".csv","(CDR).csv");
+        fileNameXLSX.replace(".xlsx","(CDR).xlsx");
+    }
 
     QXlsx::Document xlsx;
     QFile toFile;
@@ -828,34 +837,41 @@ void MainWindow::SaveToFile(QString a)
 
     QVector<QString> Data;
 
-    QString tmpData;
-    for(int i=0;i<model->columnCount();i++)
-    {
-        i<model->columnCount()-1?tmpData+=model->headerData(i,Qt::Horizontal).toString()+";":tmpData+=model->headerData(i,Qt::Horizontal).toString();
-        xlsx.write(1,i+1,model->headerData(i,Qt::Horizontal).toString());
-    }
 
-    Data.push_back(tmpData);
-    tmpData.clear();
+    QSqlQueryModel *currentModel;
+    ui->tabWidget->currentIndex() == 1 ? currentModel = edr_model : ui->tabWidget->currentIndex() == 2 ? currentModel = query_model : currentModel = model;
 
-    for(int i=0;i<model->rowCount();i++)
+    if(currentModel->query().isSelect() && currentModel->rowCount())
     {
-        for(int j=0;j<model->columnCount();j++)
+        QString tmpData;
+        for(int i=0;i<currentModel->columnCount();i++)
         {
-            j<model->columnCount()-1? tmpData+=model->data(model->index(i,j)).toString()+";":tmpData+=model->data(model->index(i,j)).toString();
-            xlsx.write(i+2,j+1,model->data(model->index(i,j)).toString());
+            i<currentModel->columnCount()-1?tmpData+=currentModel->headerData(i,Qt::Horizontal).toString()+";":tmpData+=currentModel->headerData(i,Qt::Horizontal).toString();
+            xlsx.write(1,i+1,currentModel->headerData(i,Qt::Horizontal).toString());
         }
+
         Data.push_back(tmpData);
         tmpData.clear();
+
+        for(int i=0;i<currentModel->rowCount();i++)
+        {
+            for(int j=0;j<currentModel->columnCount();j++)
+            {
+                j<currentModel->columnCount()-1? tmpData+=currentModel->data(currentModel->index(i,j)).toString()+";":tmpData+=currentModel->data(currentModel->index(i,j)).toString();
+                xlsx.write(i+2,j+1,currentModel->data(currentModel->index(i,j)).toString());
+            }
+            Data.push_back(tmpData);
+            tmpData.clear();
+        }
+
+        for(int i=0;i<Data.size();i++)
+            outFile << Data[i] << "\r\n";
+
+        toFile.close();
+        xlsx.saveAs(fileNameXLSX);
+      QMessageBox::information(this,"Info","Данные сохранены в файлы:\n"+fileName+'\n'+fileNameXLSX);
     }
-
-    for(int i=0;i<Data.size();i++)
-        outFile << Data[i] << "\r\n";
-
-    toFile.close();
-    xlsx.saveAs(fileNameXLSX);
-
-    QMessageBox::information(this,"Info","Данные сохранены в файлы:\n"+fileName+'\n'+fileNameXLSX);
+    else QMessageBox::information(this,"Info","Данных для записи нет");
 }
 
 void MainWindow::on_comboBox_currentIndexChanged(int index)
@@ -952,8 +968,7 @@ void MainWindow::on_pushButton_5_clicked()
             if(responce == 1024)
             {
                 QApplication::setOverrideCursor(Qt::WaitCursor);
-                request = "SELECT distinct date_trunc('day',datecharge) FROM edr GROUP BY datecharge";
-
+                request = "SELECT DISTINCT datecharge::date as existing_date FROM edr";
                 edr_model->setQuery(request,dataBaseEDR);
                 ui->tableViewEDR->setModel(edr_model);
                 ui->tableViewEDR->resizeColumnsToContents();
@@ -976,8 +991,8 @@ void MainWindow::on_pushButton_5_clicked()
             if(responce == 1024)
             {
                 QApplication::setOverrideCursor(Qt::WaitCursor);
-                request = "SELECT \"dateforstartofcharge\" "
-                        "FROM \"mss\" GROUP BY \"dateforstartofcharge\" ORDER BY \"dateforstartofcharge\"";
+                // cdr date
+                request = "SELECT dateforstartofcharge as existing_date FROM mss GROUP BY dateforstartofcharge ORDER BY dateforstartofcharge";
                 model->setQuery(request,db);
                 ui->tableView->setModel(model);
                 ui->tableView->resizeColumnsToContents();
@@ -1133,7 +1148,7 @@ QAbstractItemModel *MainWindow::modelFromFile(const QString& fileName)
 
     while (!file.atEnd()) {
         QByteArray line = file.readLine();
-        qDebug() << line;
+
         if (!line.isEmpty())
             words << QString::fromUtf8(line.trimmed());
     }
@@ -1294,3 +1309,4 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
     QApplication::clipboard()->setText(index.data().toString());
 }
+
