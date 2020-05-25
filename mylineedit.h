@@ -19,6 +19,7 @@ protected:
 
 signals:
     void command(QString cell);
+    void letsGetEDR(QString);
 };
 
 #endif // MYLINEEDIT_H

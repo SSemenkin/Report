@@ -129,6 +129,7 @@ void MainWindow::onStart()
     ui->outgoing->setIcon(QIcon(":/images/outgoing.png"));
     ui->all_calls->setIcon(QIcon(":/images/all_calls.png"));
     ui->cellStat->setIcon(QIcon(":/images/cell.png"));
+    ui->getDataEDR->setIcon (QIcon(":/images/show.png"));
 
 
     ui->verticalLayout_4->setAlignment(ui->saveToFile,Qt::AlignLeft);
@@ -177,6 +178,8 @@ void MainWindow::onStart()
     connect(ui->actionExit,&QAction::triggered,this,&QApplication::quit);
     connect(abonentLine,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
     connect(IMEI,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
+    connect(IMEI,&MyLineEdit::letsGetEDR ,this,&MainWindow::on_showData_clicked );
+    connect(abonentLine,&MyLineEdit::letsGetEDR ,this,&MainWindow::on_getDataEDR_clicked );
     connect(ui->chartButton,&QPushButton::clicked,this,&MainWindow::execAnalyseWithLoadChart);
 
 
@@ -247,23 +250,6 @@ void MainWindow::on_showData_clicked()
     ui->tabWidget->setCurrentWidget(ui->tab);
     QApplication::setOverrideCursor(Qt::WaitCursor);
     abonentAnalyse(-1);
-    if(dataBaseEDR.isOpen() && ui->radioButton->isChecked())
-    {
-        QString request = "select datecharge,eventidentity,result,radiotype,typerau,intrarautype"
-                          ",gsmcause,discreason,rai,cellidorsai,sac,msisdn,imsi,ptmsi,hlrnumber,sizeapn,apn,oldrai,negotiatedqos  from edr where msisdn = '380"+abonentLine->text()+"'";
-        edr_model->setQuery(request,dataBaseEDR);
-
-        QSortFilterProxyModel *sortedModel = new QSortFilterProxyModel(this);
-        sortedModel->setDynamicSortFilter(true);
-        sortedModel->setSourceModel(edr_model);
-
-        ui->tableViewEDR->setModel(sortedModel);
-        ui->tableViewEDR->resizeRowsToContents();
-        ui->tableViewEDR->resizeColumnsToContents();
-        ui->tableViewEDR->resizeRowsToContents();
-        ui->tableViewEDR->resizeColumnsToContents();
-
-    }
 
     ui->statusBar->showMessage("");
     if(ui->radioButton_5->isChecked() && ui->comboBox->currentIndex()==0)
@@ -393,7 +379,7 @@ void MainWindow::on_showData_clicked()
         //Поиск по IMEI
         if(IMEI->text().isEmpty())
         {
-            QMessageBox::critical(this,"Error","Пустой IMEI");
+            QMessageBox::warning(this,"Error","Пустой IMEI");
             QApplication::setOverrideCursor(Qt::ArrowCursor);
             return;
         }
@@ -432,7 +418,7 @@ void MainWindow::on_showData_clicked()
 
         if(abonentLine->text().isEmpty())
         {
-            QMessageBox::information(this,"Информация","Введите номер");
+            QMessageBox::warning (this,"Информация","Введите номер для поиска");
             QApplication::setOverrideCursor(Qt::ArrowCursor);
             return;
         }
@@ -458,7 +444,7 @@ void MainWindow::on_showData_clicked()
 
         if(abonentLine->text().isEmpty())
         {
-            QMessageBox::information(this,"Информация","Введите номер");
+            QMessageBox::warning(this,"Информация","Введите номер для поиска");
             QApplication::setOverrideCursor(Qt::ArrowCursor);
             return;
         }
@@ -486,7 +472,7 @@ void MainWindow::on_showData_clicked()
         if(abonentLine->text().isEmpty())
         {
             QApplication::setOverrideCursor(Qt::ArrowCursor);
-            QMessageBox::information(this,"Информация","Введите номер.");
+            QMessageBox::warning(this,"Информация","Введите номер для поиска");
             return;
         }
 
@@ -1310,3 +1296,32 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
     QApplication::clipboard()->setText(index.data().toString());
 }
 
+
+void MainWindow::on_getDataEDR_clicked()
+{
+        if(abonentLine->text ().isEmpty ()){
+            QMessageBox::warning (this,"Warning","Введите номер для поиска",QMessageBox::StandardButton::Ok);
+            return;
+        }
+
+        if(dataBaseEDR.isOpen())
+        {
+            QApplication::setOverrideCursor (Qt::WaitCursor);
+            QString request = "select datecharge,eventidentity,result,radiotype,typerau,intrarautype"
+                              ",gsmcause,discreason,rai,cellidorsai,sac,msisdn,imsi,ptmsi,hlrnumber,sizeapn,apn,oldrai,negotiatedqos  from edr where msisdn = '380"+abonentLine->text()+"'";
+            edr_model->setQuery(request,dataBaseEDR);
+
+            QSortFilterProxyModel *sortedModel = new QSortFilterProxyModel(this);
+            sortedModel->setDynamicSortFilter(true);
+            sortedModel->setSourceModel(edr_model);
+
+            ui->tableViewEDR->setModel(sortedModel);
+            ui->tableViewEDR->resizeRowsToContents();
+            ui->tableViewEDR->resizeColumnsToContents();
+            ui->tableViewEDR->resizeRowsToContents();
+            ui->tableViewEDR->resizeColumnsToContents();
+            ui->tabWidget->setCurrentIndex (1);
+
+        }
+        QApplication::setOverrideCursor (Qt::ArrowCursor);
+}

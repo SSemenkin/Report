@@ -512,6 +512,19 @@ padding-right:5px;
             </widget>
            </item>
            <item>
+            <widget class="QPushButton" name="getDataEDR">
+             <property name="maximumSize">
+              <size>
+               <width>170</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Получить данные (EDR)</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="showData">
              <property name="maximumSize">
               <size>
@@ -523,7 +536,7 @@ padding-right:5px;
               <string notr="true"/>
              </property>
              <property name="text">
-              <string>Получить данные</string>
+              <string>Получить данные (CDR)</string>
              </property>
              <property name="autoDefault">
               <bool>false</bool>
@@ -1002,7 +1015,7 @@ padding-right:5px;
      <x>0</x>
      <y>0</y>
      <width>1512</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="datd" stdset="0">
