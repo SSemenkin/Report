@@ -29,6 +29,9 @@
 #include "analysedata.h"
 #include "mylineedit.h"
 #include "settings.h"
+#include "components/qtmaterialcheckbox.h"
+#include "components/qtmaterialraisedbutton.h"
+#include "components/qtmaterialflatbutton.h"
 
 
 namespace Ui {
@@ -149,7 +152,7 @@ private:
 
     QString toOneString(QStringList list,QString separator = "\n");
 
-    QAction *actionDay,*actionWeek;
+    QAction *actionDay,*actionWeek,*actionThreeDays;
 
     QMenu *customMenu ;
 

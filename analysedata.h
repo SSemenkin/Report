@@ -43,7 +43,8 @@ class AnalyseData:public QWidget
 
 public:
 
-    AnalyseData(QSqlQueryModel*model = nullptr,QString abonent = "",QString dates = "",int actionValue = 0);
+    AnalyseData(QSqlQueryModel*model = nullptr,QString abonent = "",QString dates = "",
+                int actionValue = 0,QSqlQueryModel *edrModel = nullptr);
 
     ~AnalyseData();
 
@@ -68,6 +69,8 @@ private slots:
 
     QChartView *buildPieChart();
 
+    QChartView *buildEDRPieChart(QMap<QString,int>);
+
     QTabWidget *buildLineCharts(QVector<cell2G> cells2G);
 
     void storeResult();
@@ -76,7 +79,11 @@ private slots:
 
     void changeText();
 
+signals:
+    void threadFinished(bool);
+
 private:
+
 
 
     QSqlQueryModel *hideModel;

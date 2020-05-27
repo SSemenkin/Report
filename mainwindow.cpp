@@ -193,13 +193,21 @@ void MainWindow::onStart()
     ui->chartButton->setContextMenuPolicy(Qt::CustomContextMenu);
     actionDay = new QAction(QIcon(":/images/day.png"),"Данные загрузки за 3 дня");
     actionWeek = new QAction(QIcon(":/images/week.png"),"Данные загрзуки за неделю");
+    actionThreeDays = new QAction(QIcon(":/images/day.png"),"Данные за последние сутки");
+
     customMenu = new QMenu(this);
+    customMenu->addAction (actionThreeDays);
     customMenu->addAction(actionDay);
     customMenu->addAction(actionWeek);
+
+    connect (actionThreeDays,&QAction::triggered ,this,&MainWindow::actionChartButtonTriggered );
     connect(actionDay,&QAction::triggered,this,&MainWindow::actionChartButtonTriggered);
     connect(actionWeek,&QAction::triggered,this,&MainWindow::actionChartButtonTriggered);
     // over
     this->showMaximized();
+
+    ui->chartButton->setMenu (customMenu);
+
 }
 
 void MainWindow::DbConnect()
@@ -1010,7 +1018,11 @@ void MainWindow::on_pushButton_5_clicked()
 
 void MainWindow::on_analyseDataButton_clicked()
 {
-    if(model->rowCount()>0)
+    if(model->rowCount()>0 && edr_model->rowCount ())
+    {
+        analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),0,edr_model);
+    }
+    else if(model->rowCount ()>0 && !edr_model->rowCount ())
     {
         analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart());
     }
@@ -1196,7 +1208,11 @@ void MainWindow::openDatabaseEDR()
 
 void MainWindow::execAnalyseWithLoadChart()
 {
-    if(model->rowCount()>0)
+    if(model->rowCount()>0 && edr_model->rowCount ())
+    {
+        analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),1,edr_model);
+    }
+    else if(model->rowCount () && !edr_model->rowCount ())
     {
         analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),1);
     }
@@ -1214,9 +1230,11 @@ void MainWindow::actionChartButtonTriggered()
 
     if(action == actionDay)
     {
-        if(model->rowCount()>0)
+        if(model->rowCount()>0 )
         {
+            ui->chartButton->setEnabled (false);
             analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),3);
+            connect(analyse,&AnalyseData::threadFinished ,ui->chartButton,&QPushButton::setEnabled);
         }
         else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
     }
@@ -1224,7 +1242,20 @@ void MainWindow::actionChartButtonTriggered()
     {
         if(model->rowCount()>0)
         {
+            ui->chartButton->setEnabled (false);
             analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),7);
+            connect(analyse,&AnalyseData::threadFinished ,ui->chartButton,&QPushButton::setEnabled);
+        }
+        else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
+
+    }
+    else if (action == actionThreeDays)
+    {
+        if(model->rowCount()>0)
+        {
+            ui->chartButton->setEnabled (false);
+            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),1);
+            connect(analyse,&AnalyseData::threadFinished ,ui->chartButton,&QPushButton::setEnabled);
         }
         else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
     }
@@ -1296,7 +1327,6 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
     QApplication::clipboard()->setText(index.data().toString());
 }
 
-
 void MainWindow::on_getDataEDR_clicked()
 {
         if(abonentLine->text ().isEmpty ()){
@@ -1308,7 +1338,8 @@ void MainWindow::on_getDataEDR_clicked()
         {
             QApplication::setOverrideCursor (Qt::WaitCursor);
             QString request = "select datecharge,eventidentity,result,radiotype,typerau,intrarautype"
-                              ",gsmcause,discreason,rai,cellidorsai,sac,msisdn,imsi,ptmsi,hlrnumber,sizeapn,apn,oldrai,negotiatedqos  from edr where msisdn = '380"+abonentLine->text()+"'";
+                              ",gsmcause,discreason,rai,cellidorsai,sac,msisdn,imsi,ptmsi,hlrnumber,sizeapn,apn,oldrai,negotiatedqos  "
+                              "from edr where msisdn = '380"+abonentLine->text()+"' order by datecharge";
             edr_model->setQuery(request,dataBaseEDR);
 
             QSortFilterProxyModel *sortedModel = new QSortFilterProxyModel(this);

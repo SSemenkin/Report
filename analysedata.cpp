@@ -1,22 +1,21 @@
-#include "analysedata.h"
+ #include "analysedata.h"
 
-AnalyseData::~AnalyseData()
+AnalyseData::AnalyseData(QSqlQueryModel *model, QString abonent, QString dates, int actionValue, QSqlQueryModel *edrModel)
 {
-    delete settings;
-    delete globalLay;
-    delete chartsLayout;
-    delete hideModel;
-    delete label;
-    delete timer;
-    delete dataBar;
-    delete threadToSQLDatabase;
-}
+    chartsLayout = new QHBoxLayout;
+    if(edrModel!=nullptr)
+    {
+        QMap<QString,int> chartData;
+        for(int i =0;i<edrModel->rowCount ();i++){
+            if(!edrModel->index (i,10).data ().toString ().isEmpty ())
+            chartData[edrModel->index (i,10).data ().toString ()]++;
+        }
+        if(chartData.size ())
+            chartsLayout->addWidget (buildEDRPieChart (chartData));
+    }
 
-AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates,int actionValue)
-{
     settings = new Settings();
     globalLay = new QVBoxLayout;
-    chartsLayout = new QHBoxLayout;
     hideModel = model;
     currAbon = abonent;
     interval = dates;
@@ -36,9 +35,21 @@ AnalyseData::AnalyseData(QSqlQueryModel *model,QString abonent,QString dates,int
         cells = Cells();
         GenerateChart();
     }
-
-
 }
+
+AnalyseData::~AnalyseData()
+{
+    threadToSQLDatabase->quit ();
+    delete settings;
+    delete globalLay;
+    delete chartsLayout;
+    delete hideModel;
+    delete label;
+    delete timer;
+    delete dataBar;
+    delete threadToSQLDatabase;
+}
+
 // отрисовка всей формы с графиками и прочим наполнением
 void AnalyseData::GenerateChart()
 {
@@ -65,21 +76,24 @@ void AnalyseData::GenerateChart()
     }
     if(days!=0)
     {
-        globalLay->addWidget(label);
-        globalLay->addWidget(dataBar);
-        timer->setInterval(1000);
-        connect(timer,&QTimer::timeout,this,&AnalyseData::changeText);
-        timer->start();
-        sepChartClass = new ChartBySeparateThread();
-        sepChartClass->cells = cells;
-        sepChartClass->days = days;
+            globalLay->addWidget(label);
+            globalLay->addWidget(dataBar);
+            timer->setInterval(1000);
+            connect(timer,&QTimer::timeout,this,&AnalyseData::changeText);
 
-        sepChartClass->moveToThread(threadToSQLDatabase);
-        if(QSqlDatabase::contains("QMYSQL_detail_connection")) QSqlDatabase::removeDatabase("QMYSQL_detail_connection");
-        connect(threadToSQLDatabase,&QThread::started,sepChartClass,&ChartBySeparateThread::getChargeOf2GCellsFromMySQL);
-        connect(sepChartClass,&ChartBySeparateThread::dataRecieved,dataBar,&QProgressBar::setValue);
-        connect(sepChartClass,&ChartBySeparateThread::finished,this,&AnalyseData::storeResult);
-        threadToSQLDatabase->start();
+            timer->start();
+            sepChartClass = new ChartBySeparateThread();
+            sepChartClass->cells = cells;
+            sepChartClass->days = days;
+
+            sepChartClass->moveToThread(threadToSQLDatabase);
+            if(QSqlDatabase::contains ("QMYSQL_detail_connection")){
+                QSqlDatabase::removeDatabase ("QMYSQL_detail_connection");
+            }
+            connect(threadToSQLDatabase,&QThread::started,sepChartClass,&ChartBySeparateThread::getChargeOf2GCellsFromMySQL);
+            connect(sepChartClass,&ChartBySeparateThread::dataRecieved,dataBar,&QProgressBar::setValue);
+            connect(sepChartClass,&ChartBySeparateThread::finished,this,&AnalyseData::storeResult);
+            threadToSQLDatabase->start();
     }
 
 
@@ -178,7 +192,7 @@ QChartView *AnalyseData::buildPieChart()
 
     QChart *pieChart = new QChart;
     pieChart->legend()->setAlignment(Qt::AlignRight);
-    pieChart->setTitle("Частотный анализ секторов");
+    pieChart->setTitle("Частотный анализ секторов (CDR) ");
     pieChart->setAnimationOptions(QChart::AllAnimations);
 
 
@@ -203,6 +217,44 @@ QChartView *AnalyseData::buildPieChart()
         slice->setLabelFont(font);
         if((double(chastoti[i].second) / double(Size) * 100.0) < 5.0 )
             slice->setLabelPosition(QPieSlice::LabelOutside);
+        *pieSeries << slice;
+
+    }
+    pieChart->addSeries(pieSeries);
+    pieSeries->setLabelsVisible(true);
+
+    QChartView *chartView = new QChartView();
+    chartView->setRenderHint(QPainter::Antialiasing);
+    chartView->setChart(pieChart);
+    pieChart->setTitleFont(font);
+    pieChart->legend()->setFont(font);
+    pieChart->setFont(font);
+
+    return chartView;
+}
+
+QChartView *AnalyseData::buildEDRPieChart(QMap<QString,int> chartData)
+{
+    QFont font;
+    font.setBold(true);
+    font.setPixelSize(14);
+
+    QChart *pieChart = new QChart;
+    pieChart->legend()->setAlignment(Qt::AlignRight);
+    pieChart->setTitle("Частотный анализ секторов (EDR) ");
+    pieChart->setAnimationOptions(QChart::AllAnimations);
+
+
+    QPieSeries *pieSeries = new QPieSeries();
+
+
+    CustomSlice *slice;
+
+    for(auto it = chartData.begin ();it!=chartData.end ();++it){
+        slice = new CustomSlice(it.key (),chartData[it.key ()]);
+
+        slice->setLabelFont(font);
+        slice->setLabelPosition (CustomSlice::LabelPosition::LabelOutside);
         *pieSeries << slice;
 
     }
@@ -296,7 +348,7 @@ QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
     QChartView *chartViewi = new QChartView(icmChart);
     chartViewi->setRenderHint(QPainter::Antialiasing);
     tabWidget->addTab(chartView,"Загрузка");
-    tabWidget->addTab(chartViewi,"Интерфернция");
+    tabWidget->addTab(chartViewi,"Интерференция");
     return tabWidget;
 }
 
@@ -304,6 +356,7 @@ void AnalyseData::storeResult()
 {
     returnedData = sepChartClass->returneD;
     repaintModel();
+    emit threadFinished (true);
 }
 
 void AnalyseData::repaintModel()
@@ -331,6 +384,7 @@ void AnalyseData::changeText()
        label->setText(label->text().left(label->text().length()-2));
     }
 }
+
 
 void AnalyseData::xCopy(bool b)
 {

@@ -9,6 +9,7 @@ TextEdit::TextEdit(QWidget *parent)
 TextEdit::~TextEdit()
 {
 }
+
 void TextEdit::setCompleter(QCompleter *completer)
 {
     if (c)

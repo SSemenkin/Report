@@ -482,7 +482,7 @@ padding-right:5px;
               <string notr="true"/>
              </property>
              <property name="text">
-              <string>Частотный график CDR</string>
+              <string>Частотные графики</string>
              </property>
              <property name="autoDefault">
               <bool>false</bool>
