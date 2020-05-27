@@ -12,7 +12,6 @@ MainWindow::MainWindow(QWidget *parent) :
     onStart();
     DbConnect();
     AbonentSelected = false;
-
 }
 
 MainWindow::~MainWindow()

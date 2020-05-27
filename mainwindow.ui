@@ -453,12 +453,6 @@ padding-right:5px;
            </item>
            <item>
             <widget class="QPushButton" name="cellStat">
-             <property name="maximumSize">
-              <size>
-               <width>170</width>
-               <height>16777215</height>
-              </size>
-             </property>
              <property name="text">
               <string>Исходящие с сектора</string>
              </property>
@@ -468,12 +462,6 @@ padding-right:5px;
             <widget class="QPushButton" name="analyseDataButton">
              <property name="enabled">
               <bool>false</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>170</width>
-               <height>16777215</height>
-              </size>
              </property>
              <property name="tabletTracking">
               <bool>false</bool>
@@ -500,12 +488,6 @@ padding-right:5px;
              <property name="enabled">
               <bool>false</bool>
              </property>
-             <property name="maximumSize">
-              <size>
-               <width>170</width>
-               <height>16777215</height>
-              </size>
-             </property>
              <property name="text">
               <string>Вместе с нагрузкой</string>
              </property>
@@ -513,12 +495,6 @@ padding-right:5px;
            </item>
            <item>
             <widget class="QPushButton" name="getDataEDR">
-             <property name="maximumSize">
-              <size>
-               <width>170</width>
-               <height>16777215</height>
-              </size>
-             </property>
              <property name="text">
               <string>Получить данные (EDR)</string>
              </property>
@@ -526,12 +502,6 @@ padding-right:5px;
            </item>
            <item>
             <widget class="QPushButton" name="showData">
-             <property name="maximumSize">
-              <size>
-               <width>170</width>
-               <height>16777215</height>
-              </size>
-             </property>
              <property name="styleSheet">
               <string notr="true"/>
              </property>
@@ -1015,7 +985,7 @@ padding-right:5px;
      <x>0</x>
      <y>0</y>
      <width>1512</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="datd" stdset="0">
