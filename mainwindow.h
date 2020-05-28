@@ -29,9 +29,7 @@
 #include "analysedata.h"
 #include "mylineedit.h"
 #include "settings.h"
-#include "components/qtmaterialcheckbox.h"
-#include "components/qtmaterialraisedbutton.h"
-#include "components/qtmaterialflatbutton.h"
+
 
 
 namespace Ui {
@@ -156,6 +154,9 @@ private:
 
     QMenu *customMenu ;
 
+    QString lastSelectedNumber;
+
+    QAction* lastSelectedButton;
 
 
 };

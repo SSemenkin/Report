@@ -1018,13 +1018,11 @@ void MainWindow::on_pushButton_5_clicked()
 
 void MainWindow::on_analyseDataButton_clicked()
 {
-    if(model->rowCount()>0 && edr_model->rowCount ())
-    {
-        analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),0,edr_model);
+    if(ui->tabWidget->currentIndex ()== 0 && model->rowCount ()){
+        analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart ());
     }
-    else if(model->rowCount ()>0 && !edr_model->rowCount ())
-    {
-        analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart());
+    else if(ui->tabWidget->currentIndex ()== 1 && edr_model->rowCount ()){
+        analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart (),0,edr_model);
     }
     else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
 }
@@ -1228,12 +1226,22 @@ void MainWindow::actionChartButtonTriggered()
 {
     QAction *action = qobject_cast<QAction *> (sender());
 
+    if(lastSelectedButton == action && lastSelectedNumber == abonentLine->text ()){
+        analyse->showMaximized ();
+        return;
+    }
+    else{
+        lastSelectedNumber = abonentLine->text ();
+        lastSelectedButton = action;
+    }
+
     if(action == actionDay)
     {
         if(model->rowCount()>0 )
         {
+
             ui->chartButton->setEnabled (false);
-            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),3);
+            analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),3,edr_model);
             connect(analyse,&AnalyseData::threadFinished ,ui->chartButton,&QPushButton::setEnabled);
         }
         else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
@@ -1242,6 +1250,7 @@ void MainWindow::actionChartButtonTriggered()
     {
         if(model->rowCount()>0)
         {
+
             ui->chartButton->setEnabled (false);
             analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),7);
             connect(analyse,&AnalyseData::threadFinished ,ui->chartButton,&QPushButton::setEnabled);
@@ -1253,6 +1262,7 @@ void MainWindow::actionChartButtonTriggered()
     {
         if(model->rowCount()>0)
         {
+
             ui->chartButton->setEnabled (false);
             analyse = new AnalyseData(model,lastSelectedAbonent,getDatesToChart(),1);
             connect(analyse,&AnalyseData::threadFinished ,ui->chartButton,&QPushButton::setEnabled);
