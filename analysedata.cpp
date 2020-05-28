@@ -9,6 +9,8 @@ AnalyseData::AnalyseData(QSqlQueryModel *model, QString abonent, QString dates, 
         for(int i =0;i<edrModel->rowCount ();i++){
             if(!edrModel->index (i,10).data ().toString ().isEmpty ())
             chartData[edrModel->index (i,10).data ().toString ()]++;
+            if(!edrModel->index (i,9).data ().toString ().isEmpty ())
+            chartData[edrModel->index (i,9).data ().toString ()]++;
         }
         if(chartData.size ())
             chartsLayout->addWidget (buildEDRPieChart (chartData));
