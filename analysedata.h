@@ -30,6 +30,8 @@
 #include "customslice.h"
 #include "settings.h"
 #include "chartbyseparatethread.h"
+#include "charts/donutbreakdownchart.h"
+#include "charts/mainslice.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -72,6 +74,12 @@ private slots:
     QChartView *buildEDRPieChart(QMap<QString,int>);
 
     QTabWidget *buildLineCharts(QVector<cell2G> cells2G);
+
+    QTabWidget *buildPieCharts();
+
+    DonutBreakdownChart *buildDonutChart(QMap<QString,QMap<QString,double>> data);
+
+    QMap<QString,QMap<QString,double>> calculateFrequences(QSqlQueryModel* model);
 
     void storeResult();
 

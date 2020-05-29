@@ -74,7 +74,7 @@ void AnalyseData::GenerateChart()
 
     if(chastoti.size()>0)
     {
-        chartsLayout->addWidget(buildPieChart());
+        chartsLayout->addWidget(buildPieCharts());
     }
     if(days!=0)
     {
@@ -352,6 +352,31 @@ QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
     tabWidget->addTab(chartView,"Загрузка");
     tabWidget->addTab(chartViewi,"Интерференция");
     return tabWidget;
+}
+
+QTabWidget *AnalyseData::buildPieCharts()
+{
+    QTabWidget *widget = new QTabWidget(this);
+    widget->addTab(buildPieChart(),"Посекторный");
+    widget->addTab(buildDonutChart(calculateFrequences(hideModel)),"Поабонентный");
+    return widget;
+}
+
+DonutBreakdownChart *AnalyseData::buildDonutChart(QMap<QString, QMap<QString, double> > data)
+{
+
+}
+
+QMap<QString, QMap<QString, double> > AnalyseData::calculateFrequences(QSqlQueryModel *model)
+{
+    QMap<QString,QMap<QString,double>> result;
+
+    for(int i=0;i<model->rowCount();i++){
+
+    }
+
+
+    return result;
 }
 
 void AnalyseData::storeResult()

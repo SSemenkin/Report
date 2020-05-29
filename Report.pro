@@ -36,11 +36,14 @@ SOURCES += \
         analysedata.cpp \
         callstat.cpp \
         chartbyseparatethread.cpp \
+        charts/donutbreakdownchart.cpp \
+        charts/mainslice.cpp \
         customslice.cpp \
         loadstatecheck.cpp \
         main.cpp \
         mainwindow.cpp \
         mylineedit.cpp \
+        qtcopytableview.cpp \
         settings.cpp \
         textedit.cpp
 
@@ -48,10 +51,13 @@ HEADERS += \
         analysedata.h \
         callstat.h \
         chartbyseparatethread.h \
+        charts/donutbreakdownchart.h \
+        charts/mainslice.h \
         customslice.h \
         loadstatecheck.h \
         mainwindow.h \
         mylineedit.h \
+        qtcopytableview.h \
         settings.h \
         textedit.h
 
