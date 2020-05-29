@@ -154,6 +154,9 @@ private:
 
     QMenu *customMenu ;
 
+    QString lastSelectedNumber;
+
+    QAction* lastSelectedButton;
 
 
 };
