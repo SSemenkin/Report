@@ -12,6 +12,7 @@ class QtCopyTableView : public QTableView
     Q_OBJECT
 public:
     QtCopyTableView();
+    QtCopyTableView(QWidget *parent = nullptr);
 protected:
     void keyPressEvent(QKeyEvent *event);
 };

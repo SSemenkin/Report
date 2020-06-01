@@ -1364,7 +1364,7 @@ void MainWindow::on_getDataEDR_clicked()
 
         }
         else {
-            QMessageBox::information (this,"Information","Database EDR is not open");
+            QMessageBox::information (this,"Information",dataBaseEDR.lastError().text());
         }
         QApplication::setOverrideCursor (Qt::ArrowCursor);
 }

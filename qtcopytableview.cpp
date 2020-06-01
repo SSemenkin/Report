@@ -5,6 +5,11 @@ QtCopyTableView::QtCopyTableView()
 
 }
 
+QtCopyTableView::QtCopyTableView(QWidget *parent)
+{
+    setParent(parent);
+}
+
 void QtCopyTableView::keyPressEvent(QKeyEvent *event)
 {
     if(event->matches(QKeySequence::Copy)){
