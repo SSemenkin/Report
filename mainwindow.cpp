@@ -8,7 +8,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     settings = new Settings();
-    edr_model = new QSqlQueryModel();
+    edr_model = new QSqlQueryModel(this);
+    model = new QSqlQueryModel(this);
+    query_model = new QSqlQueryModel(this);
     onStart();
     DbConnect();
     AbonentSelected = false;
@@ -87,6 +89,10 @@ void MainWindow::onStart()
     ui->radioButton_2->setIcon(QIcon(":/images/vor.png"));
 
 
+    copyMenu = new QMenu("Опции",this);
+    copyAction = new QAction(QIcon(":/images/xCopy.png"),"Копировать",this);
+    copyMenu->addAction(copyAction);
+
     on_radioButton_clicked();
     ui->columnOrder->addItem("dateForStartOfCharge");
     ui->columnOrder->addItem("timeForStartOfCharge");
@@ -94,6 +100,7 @@ void MainWindow::onStart()
     ui->favoriteNumber->setVisible(false);
     ui->duration->setVisible(false);
     ui->line_2->setVisible(false);
+
 
 
 
@@ -156,7 +163,7 @@ void MainWindow::onStart()
     ui->comboBox->addItem("Украина");
     ui->comboBox->addItem("Международные (кроме России и Украины)");
     ui->comboBox->addItem("На городские (064)");
-    model = new QSqlQueryModel(this);
+
     ui->dateEdit->setDate(QDate::currentDate());
     ui->dateEdit_2->setDate(QDate::currentDate());
     ui->comboBox->setFixedWidth(250);
@@ -180,6 +187,23 @@ void MainWindow::onStart()
     connect(IMEI,&MyLineEdit::letsGetEDR ,this,&MainWindow::on_showData_clicked );
     connect(abonentLine,&MyLineEdit::letsGetEDR ,this,&MainWindow::on_getDataEDR_clicked );
     connect(ui->chartButton,&QPushButton::clicked,this,&MainWindow::execAnalyseWithLoadChart);
+    connect(copyAction,&QAction::triggered, [=]() {
+        QTableView *currentTable;
+        ui->tabWidget->currentIndex() == 1 ? currentTable = ui->tableViewEDR : ui->tabWidget->currentIndex() == 2 ?
+                    currentTable = ui->tableViewQuery : currentTable = ui->tableView;
+           if(!currentTable->selectionModel()->selectedIndexes().isEmpty()){
+            QString text;
+            QItemSelectionRange range = currentTable->selectionModel()->selection().first();
+            for (auto i = range.top(); i <= range.bottom(); ++i){
+                QStringList rowContents;
+                for (auto j = range.left(); j <= range.right(); ++j)
+                rowContents << currentTable->model()->index(i,j).data().toString();
+                text += rowContents.join("\t");
+                text += "\n";
+            }
+            QApplication::clipboard()->setText(text);
+        }
+    });
 
 
 
@@ -425,7 +449,7 @@ void MainWindow::on_showData_clicked()
 
         if(abonentLine->text().isEmpty())
         {
-            QMessageBox::warning (this,"Информация","Введите номер для поиска");
+            QMessageBox::warning (this,"Информация (CDR)","Введите номер для поиска");
             QApplication::setOverrideCursor(Qt::ArrowCursor);
             return;
         }
@@ -451,7 +475,7 @@ void MainWindow::on_showData_clicked()
 
         if(abonentLine->text().isEmpty())
         {
-            QMessageBox::warning(this,"Информация","Введите номер для поиска");
+            QMessageBox::warning(this,"Информация (CDR)","Введите номер для поиска");
             QApplication::setOverrideCursor(Qt::ArrowCursor);
             return;
         }
@@ -479,7 +503,7 @@ void MainWindow::on_showData_clicked()
         if(abonentLine->text().isEmpty())
         {
             QApplication::setOverrideCursor(Qt::ArrowCursor);
-            QMessageBox::warning(this,"Информация","Введите номер для поиска");
+            QMessageBox::warning(this,"Информация (CDR)","Введите номер для поиска");
             return;
         }
 
@@ -655,7 +679,7 @@ void MainWindow::on_pushButton_2_clicked()
        ui->statusBar->showMessage("Empty Query (пустой запрос).");
        return;
     }
-      query_model = new QSqlQueryModel(ui->tableViewQuery);
+
       query_model->setQuery(ui->query->toPlainText(),db);
 
 
@@ -1216,10 +1240,6 @@ void MainWindow::execAnalyseWithLoadChart()
     else QMessageBox::information(this,"Inforamtion","Нет данных для анализа");
 }
 
-void MainWindow::on_chartButton_customContextMenuRequested(const QPoint &pos)
-{
-    customMenu->popup(ui->chartButton->mapToGlobal(pos));
-}
 
 void MainWindow::actionChartButtonTriggered()
 {
@@ -1364,7 +1384,57 @@ void MainWindow::on_getDataEDR_clicked()
 
         }
         else {
-            QMessageBox::information (this,"Information",dataBaseEDR.lastError().text());
+            QMessageBox::information (this,"Информация (EDR)",dataBaseEDR.lastError().text());
         }
         QApplication::setOverrideCursor (Qt::ArrowCursor);
 }
+
+void MainWindow::on_commandLinkButton_clicked()
+{
+    if(!abonentLine->text().isEmpty() && abonentLine->text().length() >= 9){
+        QMessageBox messageBox(this);
+        messageBox.setText("Вы уверенны, что хотите перерегистрировать абонента "+
+                           abonentLine->text()+"?");
+        messageBox.setStandardButtons(QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel);
+        TelnetRegister *telnet = new TelnetRegister;
+        auto resultCode = messageBox.exec();
+        if(resultCode == QMessageBox::StandardButton::Ok){
+            connect(telnet,&TelnetRegister::errorCatched, [=](const QString errorText){QMessageBox::critical(this,"Неуспешная операция","Ошибка:"+errorText);});
+            connect(telnet,&TelnetRegister::successed, [=](){QMessageBox::information(this,"Успешная операция","Абонент успешно перерегистрирован.");});
+            connect(telnet,&TelnetRegister::executed,telnet,&TelnetRegister::deleteLater);
+            telnet->reRegisterAbonent(abonentLine->text());
+        }
+
+    } else {
+        QMessageBox::warning(this,"Warning","Введенный вами номер короче необходимого.\nМинимальная длинна составляет 9 цифр.");
+    }
+}
+
+void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
+{
+    copyAction->setEnabled(false);
+    if(model->rowCount()) {
+        copyAction->setEnabled(ui->tableView->selectionModel()->selectedIndexes().size());
+    }
+    copyMenu->popup(ui->tableView->mapToGlobal(pos));
+}
+
+void MainWindow::on_tableViewQuery_customContextMenuRequested(const QPoint &pos)
+{
+    copyAction->setEnabled(false);
+    if(query_model->rowCount()) {
+        copyAction->setEnabled(ui->tableViewQuery->selectionModel()->selectedIndexes().size());
+    }
+    copyMenu->popup(ui->tableViewQuery->mapToGlobal(pos));
+}
+
+
+void MainWindow::on_tableViewEDR_customContextMenuRequested(const QPoint &pos)
+{
+    copyAction->setEnabled(false);
+    if(edr_model->rowCount()) {
+        copyAction->setEnabled(ui->tableViewEDR->selectionModel()->selectedIndexes().size());
+    }
+    copyMenu->popup(ui->tableViewEDR->mapToGlobal(pos));
+}
+

@@ -351,7 +351,7 @@ padding-right:5px;
               </font>
              </property>
              <property name="contextMenuPolicy">
-              <enum>Qt::DefaultContextMenu</enum>
+              <enum>Qt::CustomContextMenu</enum>
              </property>
              <property name="alternatingRowColors">
               <bool>true</bool>
@@ -383,6 +383,9 @@ padding-right:5px;
           <layout class="QGridLayout" name="gridLayout_13">
            <item row="0" column="0">
             <widget class="QtCopyTableView" name="tableViewEDR">
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
              <property name="alternatingRowColors">
               <bool>true</bool>
              </property>
@@ -407,6 +410,9 @@ padding-right:5px;
           <layout class="QGridLayout" name="gridLayout_10">
            <item row="0" column="0">
             <widget class="QtCopyTableView" name="tableViewQuery">
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
              <property name="alternatingRowColors">
               <bool>true</bool>
              </property>
@@ -694,32 +700,13 @@ padding-right:5px;
           </layout>
          </item>
          <item>
-          <spacer name="verticalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
-            <spacer name="verticalSpacer_3">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
+            <widget class="QCommandLinkButton" name="commandLinkButton">
+             <property name="text">
+              <string>Перерегистрация</string>
              </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
+            </widget>
            </item>
            <item>
             <widget class="QPushButton" name="cellStat">
@@ -835,8 +822,14 @@ padding-right:5px;
             </item>
             <item>
              <widget class="QComboBox" name="comboBox">
-              <property name="styleSheet">
-               <string notr="true"/>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="insertPolicy">
+               <enum>QComboBox::InsertAtBottom</enum>
               </property>
              </widget>
             </item>

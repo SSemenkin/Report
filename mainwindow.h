@@ -29,6 +29,7 @@
 #include "analysedata.h"
 #include "mylineedit.h"
 #include "settings.h"
+#include "telnet/telnetregister.h"
 
 
 
@@ -105,8 +106,6 @@ private slots:
 
     void execAnalyseWithLoadChart();
 
-    void on_chartButton_customContextMenuRequested(const QPoint &pos);
-
     void actionChartButtonTriggered();
 
     QString calculateFrequnces();
@@ -114,6 +113,14 @@ private slots:
     void on_tableView_doubleClicked(const QModelIndex &index);
 
     void on_getDataEDR_clicked();
+
+    void on_commandLinkButton_clicked();
+
+    void on_tableView_customContextMenuRequested(const QPoint &pos);
+
+    void on_tableViewQuery_customContextMenuRequested(const QPoint &pos);
+
+    void on_tableViewEDR_customContextMenuRequested(const QPoint &pos);
 
 private:
 
@@ -150,9 +157,9 @@ private:
 
     QString toOneString(QStringList list,QString separator = "\n");
 
-    QAction *actionDay,*actionWeek,*actionThreeDays;
+    QAction *actionDay,*actionWeek,*actionThreeDays,*copyAction;
 
-    QMenu *customMenu ;
+    QMenu *customMenu, *copyMenu;
 
     QString lastSelectedNumber;
 

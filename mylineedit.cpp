@@ -7,8 +7,7 @@ MyLineEdit::MyLineEdit()
 
 void MyLineEdit::keyPressEvent(QKeyEvent *e)
 {
-
-     if(e->key () == Qt::Key_Enter && e->modifiers () == e->modifiers().testFlag(Qt::ControlModifier)){
+     if((e->key () == Qt::Key_Enter || e->key() == Qt::Key_Return) && e->modifiers().testFlag(Qt::KeyboardModifier::ControlModifier)){
          emit letsGetEDR (text());
      }
      else if(e->key() == Qt::Key_Enter || e->key() == Qt::Key_Return){

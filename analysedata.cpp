@@ -373,7 +373,6 @@ QTabWidget *AnalyseData::buildPieCharts()
 
 QChartView *AnalyseData::buildDonutChart(QMap<QString, QMap<QString, double> > data)
 {
-
     QColor colors[5] = {Qt::darkYellow,Qt::darkGreen,Qt::darkBlue,Qt::darkCyan,Qt::darkRed};
     DonutBreakdownChart *donutBreakdown = new DonutBreakdownChart;
     donutBreakdown->setAnimationOptions(QChart::AllAnimations);
@@ -387,6 +386,9 @@ QChartView *AnalyseData::buildDonutChart(QMap<QString, QMap<QString, double> > d
         }
         donutBreakdown->addBreakdownSeries (series, colors[colorCount]);
         colorCount++;
+        if(colorCount == 5){
+            colorCount = 0;
+        }
     }
     QChartView *view = new QChartView(donutBreakdown);
     view->setRenderHint (QPainter::Antialiasing);

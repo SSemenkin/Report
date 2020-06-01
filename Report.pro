@@ -45,6 +45,7 @@ SOURCES += \
         mylineedit.cpp \
         qtcopytableview.cpp \
         settings.cpp \
+        telnet/telnetregister.cpp \
         textedit.cpp
 
 HEADERS += \
@@ -59,6 +60,7 @@ HEADERS += \
         mylineedit.h \
         qtcopytableview.h \
         settings.h \
+        telnet/telnetregister.h \
         textedit.h
 
 FORMS += \

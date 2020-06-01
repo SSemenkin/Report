@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QLineEdit>
 #include <QKeyEvent>
-#include <QComboBox>
+#include <QDebug>
 
 class MyLineEdit : public QLineEdit
 {
