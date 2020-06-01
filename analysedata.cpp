@@ -3,19 +3,7 @@
 AnalyseData::AnalyseData(QSqlQueryModel *model, QString abonent, QString dates, int actionValue, QSqlQueryModel *edrModel)
 {
     chartsLayout = new QHBoxLayout;
-    if(edrModel!=nullptr)
-    {
-        QMap<QString,int> chartData;
-        for(int i =0;i<edrModel->rowCount ();i++){
-            if(!edrModel->index (i,10).data ().toString ().isEmpty ())
-            chartData[edrModel->index (i,10).data ().toString ()]++;
-            if(!edrModel->index (i,9).data ().toString ().isEmpty ())
-            chartData[edrModel->index (i,9).data ().toString ()]++;
-        }
-        if(chartData.size ())
-            chartsLayout->addWidget (buildEDRPieChart (chartData));
-    }
-
+    hideEdrModel = edrModel;
     settings = new Settings();
     globalLay = new QVBoxLayout;
     hideModel = model;
@@ -74,7 +62,11 @@ void AnalyseData::GenerateChart()
 
     if(chastoti.size()>0)
     {
-        chartsLayout->addWidget(buildPieCharts());
+        if(days == 0 ){
+            chartsLayout->addWidget(buildPieCharts());
+        } else {
+            chartsLayout->addWidget (buildPieChart ());
+        }
     }
     if(days!=0)
     {
@@ -136,6 +128,8 @@ void AnalyseData::GenerateChart()
 
     this->setLayout(globalLay);
     this->showMaximized();
+    chartsLayout->itemAt (0)->setGeometry (QRect(chartsLayout->itemAt (0)->geometry ().x (),chartsLayout->itemAt (0)->geometry ().y (),
+                                                 this->width ()/2,chartsLayout->itemAt (0)->geometry ().height ()));
 }
 //наполнение командами для просмотра нагрузки
 void AnalyseData::setCommands(int value)
@@ -357,25 +351,68 @@ QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
 QTabWidget *AnalyseData::buildPieCharts()
 {
     QTabWidget *widget = new QTabWidget(this);
-    widget->addTab(buildPieChart(),"Посекторный");
-    widget->addTab(buildDonutChart(calculateFrequences(hideModel)),"Поабонентный");
+    if(hideEdrModel!=nullptr)
+    {
+        QMap<QString,int> chartData;
+        for(int i =0;i<hideEdrModel->rowCount ();i++){
+            if(!hideEdrModel->index (i,10).data ().toString ().isEmpty ())
+            chartData[hideEdrModel->index (i,10).data ().toString ()]++;
+            if(!hideEdrModel->index (i,9).data ().toString ().isEmpty ())
+            chartData[hideEdrModel->index (i,9).data ().toString ()]++;
+        }
+        if(chartData.size ())
+            widget->addTab (buildEDRPieChart (chartData),"Частоты EDR");
+    }
+    widget->addTab (buildPieChart(),"Частоты секторов");
+    if(days == 0){
+        widget->addTab (buildDonutChart (calculateFrequences (hideModel)),"Соотношения звонков");
+        widget->addTab (buildDonutChart (calculateFrequences (hideModel,false)), "Соотношения звонков по датам");
+    }
     return widget;
 }
 
-DonutBreakdownChart *AnalyseData::buildDonutChart(QMap<QString, QMap<QString, double> > data)
+QChartView *AnalyseData::buildDonutChart(QMap<QString, QMap<QString, double> > data)
 {
 
+    QColor colors[5] = {Qt::darkYellow,Qt::darkGreen,Qt::darkBlue,Qt::darkCyan,Qt::darkRed};
+    DonutBreakdownChart *donutBreakdown = new DonutBreakdownChart;
+    donutBreakdown->setAnimationOptions(QChart::AllAnimations);
+    donutBreakdown->legend()->setAlignment(Qt::AlignRight);
+    uint colorCount = 0;
+    for(auto it = data.begin (); it != data.end (); ++it){
+        QPieSeries *series = new QPieSeries();
+        series->setName (it.key ());
+        for(auto ij = data[it.key ()].begin (); ij != data[it.key ()].end();++ij){
+            series->append (ij.key (),data[it.key ()][ij.key ()]);
+        }
+        donutBreakdown->addBreakdownSeries (series, colors[colorCount]);
+        colorCount++;
+    }
+    QChartView *view = new QChartView(donutBreakdown);
+    view->setRenderHint (QPainter::Antialiasing);
+    return view;
 }
 
-QMap<QString, QMap<QString, double> > AnalyseData::calculateFrequences(QSqlQueryModel *model)
+QMap<QString, QMap<QString, double> > AnalyseData::calculateFrequences(QSqlQueryModel *model,bool flagCells)
 {
     QMap<QString,QMap<QString,double>> result;
-
-    for(int i=0;i<model->rowCount();i++){
-
+    if(flagCells){
+        for(int i=0;i<model->rowCount();i++){
+            if(model->index (i,1).data ().toString () == currAbon){
+                result["Исходящие"][model->index (i,2).data().toString ()] ++;
+            } else {
+                result["Входящие"][model->index (i,1).data().toString ()] ++;
+            }
+        }
+    } else {
+        for(int i=0;i<model->rowCount();i++){
+            if(model->index (i,1).data ().toString () == currAbon){
+                result[model->index (i,3).data().toString ()][model->index (i,2).data().toString ()] ++;
+            } else {
+                result[model->index (i,3).data ().toString ()][model->index (i,1).data().toString ()] ++;
+            }
+        }
     }
-
-
     return result;
 }
 
@@ -429,7 +466,6 @@ void AnalyseData::swap(QPair<QString,int> &a,QPair<QString,int> &b)
 
 void AnalyseData::updateWindowWidgets()
 {
-
     this->setWindowTitle("Исходящие абонента "+currAbon);
     this->setWindowIcon(QIcon(":/images/detail.png"));
 }

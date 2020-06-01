@@ -77,15 +77,15 @@ private slots:
 
     QTabWidget *buildPieCharts();
 
-    DonutBreakdownChart *buildDonutChart(QMap<QString,QMap<QString,double>> data);
-
-    QMap<QString,QMap<QString,double>> calculateFrequences(QSqlQueryModel* model);
+    QChartView *buildDonutChart(QMap<QString,QMap<QString,double>> data);
 
     void storeResult();
 
     void repaintModel();
 
     void changeText();
+
+    QMap<QString,QMap<QString,double>> calculateFrequences(QSqlQueryModel* model,bool flagCells = true);
 
 signals:
     void threadFinished(bool);
@@ -94,7 +94,7 @@ private:
 
 
 
-    QSqlQueryModel *hideModel;
+    QSqlQueryModel *hideModel,*hideEdrModel;
     QString currAbon,interval;
 
     // already user params

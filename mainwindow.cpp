@@ -1363,5 +1363,8 @@ void MainWindow::on_getDataEDR_clicked()
             ui->tabWidget->setCurrentIndex (1);
 
         }
+        else {
+            QMessageBox::information (this,"Information","Database EDR is not open");
+        }
         QApplication::setOverrideCursor (Qt::ArrowCursor);
 }
