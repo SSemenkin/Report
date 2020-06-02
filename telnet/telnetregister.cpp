@@ -1,3 +1,4 @@
+
 #include "telnetregister.h"
 
 TelnetRegister::TelnetRegister(QObject *parent) : QObject(parent)
@@ -19,12 +20,22 @@ void TelnetRegister::reRegisterAbonent(const QString abonentNumber)
     socket->connectToHost(ipHLR,23);
 }
 
+void TelnetRegister::printProfileAbonent(const QString abonentNumber)
+{
+    is_profile_print = true;
+    reRegisterAbonent(abonentNumber);
+}
+
 void TelnetRegister::processAnswersFromHLR()
 {
     timer->setInterval(10000);
     timer->start();
-    connect(timer,&QTimer::timeout,[=](){emit errorCatched("Timeout(10s).");
-                                         emit executed();});
+    connect(timer,&QTimer::timeout,[=](){
+        timer->stop();
+        socket->disconnectFromHost();
+        emit errorCatched("Timeout(10s).");
+        emit executed();
+    });
     QString reply = socket->readAll().toLower();
     if(reply.right(12) == "login name: "){
         socket->write(QString(loginName+"\r\n").toUtf8());
@@ -41,10 +52,16 @@ void TelnetRegister::processAnswersFromHLR()
     else if(!subString(reply,"hlr1").isEmpty()){
         socket->write(QString("hgsdp:msisdn = "+__abonent+",all;\r\n").toUtf8());
     }
-    else if(!subString(reply,"end").isEmpty()){
+    else if(!subString(reply,"end").isEmpty() && !is_profile_print){
         __imsi = subString(reply,"255995000").left(15);
         __pdpcp = subString(reply,"pdpcp").left(7).right(1);
         socket->write(QString("hgsue:msisdn = "+__abonent+";\r\n").toUtf8());
+    }
+    else if(!subString(reply,"end").isEmpty() && is_profile_print){
+        socket->disconnectFromHost();
+        timer->stop();
+        emit profileReady(reply);
+        emit executed();
     }
     else if(!subString(reply,"ecuted").isEmpty() && !firstFlag){
         if(__pdpcp != "1"){
@@ -56,10 +73,13 @@ void TelnetRegister::processAnswersFromHLR()
     }
     else if(!subString(reply,"ecuted").isEmpty() && firstFlag){
         socket->disconnectFromHost();
+        timer->stop();
         emit successed();
         emit executed();
     }
     else if(!subString(reply,"fault code").isEmpty()){
+        socket->disconnectFromHost();
+        timer->stop();
         emit errorCatched(subString(reply,"fault code"));
         emit executed();
     }

@@ -136,7 +136,8 @@ void MainWindow::onStart()
     ui->all_calls->setIcon(QIcon(":/images/all_calls.png"));
     ui->cellStat->setIcon(QIcon(":/images/cell.png"));
     ui->getDataEDR->setIcon (QIcon(":/images/show.png"));
-
+    ui->regButton->setIcon(QIcon(":/images/refresh.png"));
+    ui->printProfile->setIcon(QIcon(":/images/profile.png"));
 
     ui->verticalLayout_4->setAlignment(ui->saveToFile,Qt::AlignLeft);
 
@@ -181,7 +182,21 @@ void MainWindow::onStart()
                  "and calledPartyNumber <> 505  and calledPartyNumber <> 333 and calledPartyNumber <> 109 and calledPartyNumber not like '062%'";
 
     abonentLine->setFocus();
-    connect(ui->actionExit,&QAction::triggered,this,&QApplication::quit);
+    connect(ui->aboutQt,&QAction::triggered,[=](){QMessageBox::aboutQt(this,"About Qt");});
+    connect(ui->aboutAction_2,&QAction::triggered,[=](){
+        QMessageBox messageBox(this);
+        messageBox.setTextFormat(Qt::RichText);
+        messageBox.setText(aboutProgram(":/about"));
+        messageBox.setIcon(QMessageBox::Icon::Information);
+        messageBox.exec();
+    });
+    connect(ui->actionChangelog,&QAction::triggered,[=](){
+        QMessageBox messageBox(this);
+        messageBox.setTextFormat(Qt::RichText);
+        messageBox.setText(aboutProgram(":/changelog"));
+        messageBox.setIcon(QMessageBox::Icon::Information);
+        messageBox.exec();
+    });
     connect(abonentLine,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
     connect(IMEI,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
     connect(IMEI,&MyLineEdit::letsGetEDR ,this,&MainWindow::on_showData_clicked );
@@ -1389,27 +1404,6 @@ void MainWindow::on_getDataEDR_clicked()
         QApplication::setOverrideCursor (Qt::ArrowCursor);
 }
 
-void MainWindow::on_commandLinkButton_clicked()
-{
-    if(!abonentLine->text().isEmpty() && abonentLine->text().length() >= 9){
-        QMessageBox messageBox(this);
-        messageBox.setText("Вы уверенны, что хотите перерегистрировать абонента "+
-                           abonentLine->text()+"?");
-        messageBox.setStandardButtons(QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel);
-        TelnetRegister *telnet = new TelnetRegister;
-        auto resultCode = messageBox.exec();
-        if(resultCode == QMessageBox::StandardButton::Ok){
-            connect(telnet,&TelnetRegister::errorCatched, [=](const QString errorText){QMessageBox::critical(this,"Неуспешная операция","Ошибка:"+errorText);});
-            connect(telnet,&TelnetRegister::successed, [=](){QMessageBox::information(this,"Успешная операция","Абонент успешно перерегистрирован.");});
-            connect(telnet,&TelnetRegister::executed,telnet,&TelnetRegister::deleteLater);
-            telnet->reRegisterAbonent(abonentLine->text());
-        }
-
-    } else {
-        QMessageBox::warning(this,"Warning","Введенный вами номер короче необходимого.\nМинимальная длинна составляет 9 цифр.");
-    }
-}
-
 void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
 {
     copyAction->setEnabled(false);
@@ -1438,3 +1432,48 @@ void MainWindow::on_tableViewEDR_customContextMenuRequested(const QPoint &pos)
     copyMenu->popup(ui->tableViewEDR->mapToGlobal(pos));
 }
 
+
+void MainWindow::on_regButton_clicked()
+{
+    if(!abonentLine->text().isEmpty() && abonentLine->text().length() >= 9){
+        QMessageBox messageBox(this);
+        messageBox.setText("Вы уверенны, что хотите перерегистрировать абонента "+
+                           abonentLine->text()+"?");
+        messageBox.setStandardButtons(QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel);
+        auto resultCode = messageBox.exec();
+        if(resultCode == QMessageBox::StandardButton::Ok){
+            TelnetRegister *telnet = new TelnetRegister;
+            connect(telnet,&TelnetRegister::errorCatched, [=](const QString errorText){QMessageBox::critical(this,"Неуспешная операция","Ошибка:"+errorText);});
+            connect(telnet,&TelnetRegister::successed, [=](){QMessageBox::information(this,"Успешная операция","Абонент успешно перерегистрирован.");});
+            connect(telnet,&TelnetRegister::executed,telnet,&TelnetRegister::deleteLater);
+            telnet->reRegisterAbonent(abonentLine->text());
+        }
+
+    } else {
+        QMessageBox::warning(this,"Warning","Введенный вами номер короче необходимого.\nМинимальная длинна составляет 9 цифр.");
+    }
+}
+
+QString MainWindow::aboutProgram(const QString filepath) const
+{
+    QFile changeLog(filepath);
+    changeLog.open(QIODevice::ReadOnly);
+    const QString text = (QString)changeLog.readAll();
+    changeLog.close();
+    return text;
+}
+
+void MainWindow::on_printProfile_clicked()
+{
+    if(!abonentLine->text().isEmpty() && abonentLine->text().length() >= 9){
+            TelnetRegister *telnet = new TelnetRegister;
+            connect(telnet,&TelnetRegister::errorCatched, [=](const QString errorText){QMessageBox::critical(this,"Неуспешная операция","Ошибка:"+errorText);});
+            connect(telnet,&TelnetRegister::profileReady, [=](const QString print){QMessageBox::information(this,"Профиль абонента "+abonentLine->text(),print);});
+            connect(telnet,&TelnetRegister::executed,telnet,&TelnetRegister::deleteLater);
+            telnet->printProfileAbonent(abonentLine->text());
+
+
+    } else {
+        QMessageBox::warning(this,"Warning","Введенный вами номер короче необходимого.\nМинимальная длинна составляет 9 цифр.");
+    }
+}

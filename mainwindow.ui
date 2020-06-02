@@ -700,16 +700,45 @@ padding-right:5px;
           </layout>
          </item>
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
+          <widget class="QPushButton" name="printProfile">
+           <property name="minimumSize">
+            <size>
+             <width>170</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Принт профайла</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_13">
            <item>
-            <widget class="QCommandLinkButton" name="commandLinkButton">
+            <widget class="QPushButton" name="regButton">
+             <property name="minimumSize">
+              <size>
+               <width>170</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="text">
               <string>Перерегистрация</string>
              </property>
             </widget>
            </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
             <widget class="QPushButton" name="cellStat">
+             <property name="minimumSize">
+              <size>
+               <width>170</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="text">
               <string>Исходящие с сектора</string>
              </property>
@@ -719,6 +748,12 @@ padding-right:5px;
             <widget class="QPushButton" name="analyseDataButton">
              <property name="enabled">
               <bool>false</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>170</width>
+               <height>0</height>
+              </size>
              </property>
              <property name="tabletTracking">
               <bool>false</bool>
@@ -745,6 +780,12 @@ padding-right:5px;
              <property name="enabled">
               <bool>false</bool>
              </property>
+             <property name="minimumSize">
+              <size>
+               <width>170</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="text">
               <string>Вместе с нагрузкой</string>
              </property>
@@ -752,6 +793,12 @@ padding-right:5px;
            </item>
            <item>
             <widget class="QPushButton" name="getDataEDR">
+             <property name="minimumSize">
+              <size>
+               <width>170</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="text">
               <string>Получить данные (EDR)</string>
              </property>
@@ -759,6 +806,12 @@ padding-right:5px;
            </item>
            <item>
             <widget class="QPushButton" name="showData">
+             <property name="minimumSize">
+              <size>
+               <width>170</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="styleSheet">
               <string notr="true"/>
              </property>
@@ -776,8 +829,23 @@ padding-right:5px;
              </property>
             </widget>
            </item>
-           <item>
+           <item alignment="Qt::AlignHCenter">
             <widget class="QCheckBox" name="saveToFile">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>170</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="tabletTracking">
+              <bool>false</bool>
+             </property>
              <property name="layoutDirection">
               <enum>Qt::LeftToRight</enum>
              </property>
@@ -789,6 +857,13 @@ padding-right:5px;
              </property>
              <property name="text">
               <string>Сохранить в файл</string>
+             </property>
+             <property name="icon">
+              <iconset resource="rs.qrc">
+               <normaloff>:/images/save.png</normaloff>:/images/save.png</iconset>
+             </property>
+             <property name="tristate">
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -982,13 +1057,21 @@ padding-right:5px;
    <property name="datd" stdset="0">
     <string/>
    </property>
-   <widget class="QMenu" name="menuFile">
+   <widget class="QMenu" name="menu">
     <property name="title">
-     <string>File</string>
+     <string>Помощь</string>
     </property>
-    <addaction name="actionExit"/>
+    <widget class="QMenu" name="menu_2">
+     <property name="title">
+      <string>О программе...</string>
+     </property>
+     <addaction name="aboutAction_2"/>
+     <addaction name="actionChangelog"/>
+    </widget>
+    <addaction name="aboutQt"/>
+    <addaction name="menu_2"/>
    </widget>
-   <addaction name="menuFile"/>
+   <addaction name="menu"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -1013,6 +1096,21 @@ padding-right:5px;
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="aboutQt">
+   <property name="text">
+    <string>О Qt...</string>
+   </property>
+  </action>
+  <action name="aboutAction_2">
+   <property name="text">
+    <string> О программе</string>
+   </property>
+  </action>
+  <action name="actionChangelog">
+   <property name="text">
+    <string>Changelog</string>
    </property>
   </action>
  </widget>

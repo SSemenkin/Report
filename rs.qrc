@@ -36,5 +36,9 @@
         <file>images/cdr_origin.png</file>
         <file>images/edr_origin.png</file>
         <file>images/sql.png</file>
+        <file>images/refresh.png</file>
+        <file>images/profile.png</file>
+        <file>about</file>
+        <file>changelog</file>
     </qresource>
 </RCC>

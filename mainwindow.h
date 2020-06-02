@@ -33,6 +33,7 @@
 
 
 
+
 namespace Ui {
 class MainWindow;
 }
@@ -114,13 +115,17 @@ private slots:
 
     void on_getDataEDR_clicked();
 
-    void on_commandLinkButton_clicked();
-
     void on_tableView_customContextMenuRequested(const QPoint &pos);
 
     void on_tableViewQuery_customContextMenuRequested(const QPoint &pos);
 
     void on_tableViewEDR_customContextMenuRequested(const QPoint &pos);
+
+    void on_regButton_clicked();
+
+    QString aboutProgram(const QString path) const;
+
+    void on_printProfile_clicked();
 
 private:
 
@@ -164,6 +169,8 @@ private:
     QString lastSelectedNumber;
 
     QAction* lastSelectedButton;
+
+
 
 
 };

@@ -13,9 +13,12 @@ public:
 
     void reRegisterAbonent(const QString abonentNumber );
 
+    void printProfileAbonent(const QString abonentNumber);
+
 signals:
 
     void successed();
+    void profileReady(const QString profileText);
     void errorCatched(const QString errorText);
     void executed();
 
@@ -25,6 +28,7 @@ private:
     QString __imsi;
     QString __pdpcp;
     bool firstFlag = false;
+    bool is_profile_print = false;
 
     void processAnswersFromHLR();
 
