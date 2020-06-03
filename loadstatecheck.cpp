@@ -183,4 +183,3 @@ QStringList LoadStateCheck::makeTextBeautiful(QStringList txt)
             }
     return txt;
 }
-

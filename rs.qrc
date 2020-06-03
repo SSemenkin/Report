@@ -40,5 +40,6 @@
         <file>images/profile.png</file>
         <file>about</file>
         <file>changelog</file>
+        <file>images/changeProfile.png</file>
     </qresource>
 </RCC>

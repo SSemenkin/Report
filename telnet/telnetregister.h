@@ -4,6 +4,8 @@
 #include <QtCore/QObject>
 #include <QtNetwork/QTcpSocket>
 #include <QTimer>
+#include <QFile>
+#include <QDateTime>
 
 class TelnetRegister : public QObject
 {
@@ -15,6 +17,8 @@ public:
 
     void printProfileAbonent(const QString abonentNumber);
 
+    void changePDPCP(const QString abonentNumber);
+
 signals:
 
     void successed();
@@ -23,21 +27,31 @@ signals:
     void executed();
 
 private:
+    enum OperationBehavior{
+        PrintProfile, ChangeSUD, Reregister
+    };
 
     QString __abonent;
     QString __imsi;
     QString __pdpcp;
-    bool firstFlag = false;
-    bool is_profile_print = false;
+    OperationBehavior __behavior;
+    uint countCommands = 0;
+
+    QString allOperationText;
 
     void processAnswersFromHLR();
 
+    void validateNumber(const QString number);
+
     QString subString(const QString text, const QString buffer);
+
+    void loging(QString erroText = "") const ;
 
     const QString ipHLR = "10.20.201.20", loginName = "Smena", password = "Ericsson1@";
 
     QTcpSocket *socket;
     QTimer *timer;
+
 
 };
 

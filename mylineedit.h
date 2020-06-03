@@ -13,6 +13,7 @@ class MyLineEdit : public QLineEdit
 
 public:
     MyLineEdit();
+    MyLineEdit(QWidget *parent = nullptr);
 
 protected:
     void keyPressEvent(QKeyEvent *e) ;

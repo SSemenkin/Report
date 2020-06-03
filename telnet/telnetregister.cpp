@@ -6,84 +6,124 @@ TelnetRegister::TelnetRegister(QObject *parent) : QObject(parent)
     socket = new QTcpSocket(this);
     timer = new QTimer(this);
     connect(socket,&QTcpSocket::readyRead,this,&TelnetRegister::processAnswersFromHLR);
+    timer->setInterval(10000);
+    timer->start();
+    connect(timer,&QTimer::timeout,[=](){
+        timer->stop();
+        timer->deleteLater();
+        socket->disconnectFromHost();
+        loging(allOperationText);
+        emit errorCatched("Timeout(10s).");
+        emit executed();
+    });
 }
 
 void TelnetRegister::reRegisterAbonent(const QString abonentNumber)
 {
-    if(abonentNumber.left(2) == "72") {
-         __abonent = "380" + abonentNumber;
-    } else if(abonentNumber.left(3) == "072"){
-        __abonent = "38" + abonentNumber;
-    } else {
-        __abonent = abonentNumber;
-    }
+    validateNumber(abonentNumber);
+    __behavior = OperationBehavior::Reregister;
+    loging();
     socket->connectToHost(ipHLR,23);
 }
 
 void TelnetRegister::printProfileAbonent(const QString abonentNumber)
 {
-    is_profile_print = true;
-    reRegisterAbonent(abonentNumber);
+    validateNumber(abonentNumber);
+    __behavior = OperationBehavior::PrintProfile;
+    loging();
+    socket->connectToHost(ipHLR,23);
+}
+
+void TelnetRegister::changePDPCP(const QString abonentNumber)
+{
+    validateNumber(abonentNumber);
+    __behavior = OperationBehavior::ChangeSUD;
+    loging();
+    socket->connectToHost(ipHLR,23);
 }
 
 void TelnetRegister::processAnswersFromHLR()
 {
-    timer->setInterval(10000);
-    timer->start();
-    connect(timer,&QTimer::timeout,[=](){
-        timer->stop();
-        socket->disconnectFromHost();
-        emit errorCatched("Timeout(10s).");
-        emit executed();
-    });
+
+
+
     QString reply = socket->readAll().toLower();
+    qDebug() << reply;
+    allOperationText += reply;
+    ///AUTH
     if(reply.right(12) == "login name: "){
         socket->write(QString(loginName+"\r\n").toUtf8());
-    }
-    else if(reply.right(10) == "password: "){
+    } else if(reply.right(10) == "password: "){
         socket->write(QString(password + "\r\n").toUtf8());
-    }
-    else if(reply.right(8) == "domain: "){
+    } else if(reply.right(8) == "domain: "){
         socket->write(QString("\r\n").toUtf8());
-    }
-    else if(!subString(reply,"winnt\\profiles\\smena").isEmpty()){
+    } else if(!subString(reply,"winnt\\profiles\\").isEmpty()){
         socket->write(QString("mml -a\r\n").toUtf8());
-    }
-    else if(!subString(reply,"hlr1").isEmpty()){
+    } else if(!subString(reply,"hlr1").isEmpty()) {
         socket->write(QString("hgsdp:msisdn = "+__abonent+",all;\r\n").toUtf8());
     }
-    else if(!subString(reply,"end").isEmpty() && !is_profile_print){
-        __imsi = subString(reply,"255995000").left(15);
-        __pdpcp = subString(reply,"pdpcp").left(7).right(1);
-        socket->write(QString("hgsue:msisdn = "+__abonent+";\r\n").toUtf8());
-    }
-    else if(!subString(reply,"end").isEmpty() && is_profile_print){
-        socket->disconnectFromHost();
-        timer->stop();
-        emit profileReady(reply);
-        emit executed();
-    }
-    else if(!subString(reply,"ecuted").isEmpty() && !firstFlag){
-        if(__pdpcp != "1"){
-            __pdpcp = "2";
+    ///AUTH END
+    /// BEGIN BEHAVIOR BRANCHING
+    if(__behavior == OperationBehavior::ChangeSUD){
+        if(!subString(reply,"end").isEmpty()){
+           __pdpcp = subString(reply,"pdpcp-").left(7).right(1) == "1" ? "3" : "1";
+           qDebug() << __pdpcp;
+           socket->write(QString("hgsdc:msisdn = "+__abonent+",sud=pdpcp-"+__pdpcp+";\r\n").toUtf8());
         }
-        firstFlag = true;
-        socket->write(QString("HGSUI:IMSI="+__imsi+" ,MSISDN= "+__abonent+" ,PROFILE="+__pdpcp+";\r\n").toUtf8());
+        else if(!subString(reply,"ecuted").isEmpty() ){
+           countCommands ++;
+           timer->stop();
+           socket->disconnectFromHost();
+           emit successed();
+           emit executed();
+        }
 
+    } else if(__behavior == OperationBehavior::Reregister){
+        if(!subString(reply,"end").isEmpty()){
+           __imsi = subString(reply,"255995000").left(16);
+           __pdpcp = subString(reply,"pdpcp-").left(7).right(1);
+           socket->write(QString("hgsue:msisdn = "+__abonent+";\r\n").toUtf8());
+        }
+        else if(!subString(reply,"ecuted").isEmpty() && countCommands == 0){
+           countCommands ++;
+           QString profile = __pdpcp == "1" ? "1" : "2";
+           socket->write(QString("HGSUI:IMSI="+__imsi+",MSISDN= "+__abonent+" ,PROFILE="+profile+";\r\n").toUtf8());
+        }
+        else if(!subString(reply,"ecuted").isEmpty() && countCommands == 1){
+            countCommands ++;
+            timer->stop();
+            socket->disconnectFromHost();
+            emit successed();
+            emit executed();
+        }
+    } else {
+        if(!subString(reply,"end").isEmpty()){
+            timer->stop();
+            socket->disconnectFromHost();
+            emit profileReady(reply);
+            emit executed();
+        }
     }
-    else if(!subString(reply,"ecuted").isEmpty() && firstFlag){
-        socket->disconnectFromHost();
+
+    ///ERRORS
+    if(!subString(reply,"fault code").isEmpty()){
         timer->stop();
-        emit successed();
+        socket->disconnectFromHost();
+        loging(allOperationText);
+        emit errorCatched(reply);
         emit executed();
     }
-    else if(!subString(reply,"fault code").isEmpty()){
-        socket->disconnectFromHost();
-        timer->stop();
-        emit errorCatched(subString(reply,"fault code"));
-        emit executed();
-    }
+}
 
+void TelnetRegister::validateNumber(const QString number)
+{
+    if(number.left(2) == "72") {
+         __abonent = "380" + number;
+    } else if(number.left(3) == "072"){
+        __abonent = "38" + number;
+    } else {
+        __abonent = number;
+    }
 }
 
 QString TelnetRegister::subString(const QString text, const QString buffer)
@@ -95,4 +135,23 @@ QString TelnetRegister::subString(const QString text, const QString buffer)
         }
     }
     return "";
+}
+
+void TelnetRegister::loging(QString errorText) const
+{
+    if(errorText.isEmpty()){
+        QFile file("telnet-operations.txt");
+        file.open(QIODevice::WriteOnly | QIODevice::Append);
+        QString operation = __behavior == OperationBehavior::ChangeSUD ? " Смена тарифа " : __behavior == OperationBehavior::Reregister ?
+                                                                             " Перерегистрация " : " Принт профайла ";
+        file.write(QString(QDateTime::currentDateTime().toString(Qt::DateFormat::ISODate) +operation +__abonent+"\n").toUtf8());
+        file.close();
+    } else {
+        QFile file("errorsTelnet-operations.txt");
+        file.open(QIODevice::WriteOnly | QIODevice::Append);
+        QString operation = __behavior == OperationBehavior::ChangeSUD ? " Смена тарифа " : __behavior == OperationBehavior::Reregister ?
+                                                                             " Перерегистрация " : " Принт профайла ";
+        file.write(QString(QDateTime::currentDateTime().toString(Qt::DateFormat::ISODate) +operation +__abonent+"\n ErrorText:"+errorText+"\n\n").toUtf8());
+        file.close();
+    }
 }

@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    search = new GeoSearch(this);
     settings = new Settings();
     edr_model = new QSqlQueryModel(this);
     model = new QSqlQueryModel(this);
@@ -28,8 +29,6 @@ MainWindow::~MainWindow()
         }
     }
     delete completer;
-    delete abonentLine;
-    delete IMEI;
     delete customMenu;
     delete actionDay;
     delete actionWeek;
@@ -76,11 +75,6 @@ void MainWindow::onStart()
     completer->setWrapAround(false);
     ui->query->setCompleter(completer);
 
-    abonentLine = new MyLineEdit();
-    IMEI = new MyLineEdit();
-
-    ui->horizontalLayout_11->insertWidget(1,IMEI);
-    ui->horizontalLayout_3->insertWidget(0,abonentLine);
 
     setWindowIcon(QIcon(":/images/main.ico"));
 
@@ -111,12 +105,10 @@ void MainWindow::onStart()
     ui->groupBox_2->setAlignment(Qt::AlignLeft);
     ui->groupBox_6->setAlignment(Qt::AlignRight);
 
-    ui->groupBox_7->setFixedHeight(150);
-
-    ui->verticalLayout_4->setAlignment(ui->saveToFile,Qt::AlignHCenter);
+    ui->groupBox_7->setFixedHeight(130);
 
 
-    abonentLine->setFixedWidth(250);
+    ui->abonentLine->setFixedWidth(250);
     ui->pastePB->setFixedWidth(50);
 
     ui->showData->setShortcut(QKeySequence(tr("Ctrl+L")));
@@ -138,8 +130,8 @@ void MainWindow::onStart()
     ui->getDataEDR->setIcon (QIcon(":/images/show.png"));
     ui->regButton->setIcon(QIcon(":/images/refresh.png"));
     ui->printProfile->setIcon(QIcon(":/images/profile.png"));
+    ui->changePdpcp->setIcon(QIcon(":/images/changeProfile.png"));
 
-    ui->verticalLayout_4->setAlignment(ui->saveToFile,Qt::AlignLeft);
 
     ui->radioButton->setChecked(true);
     ui->outgoing->setToolTip("Указывать номер нужно в формате 72XXXXXXX");
@@ -169,8 +161,8 @@ void MainWindow::onStart()
     ui->dateEdit_2->setDate(QDate::currentDate());
     ui->comboBox->setFixedWidth(250);
 
-    IMEI->setValidator(new QRegExpValidator(QRegExp("[0-9]{15}")));
-    abonentLine->setValidator(new QRegExpValidator(QRegExp("[0-9]{15}")));
+    ui->IMEI->setValidator(new QRegExpValidator(QRegExp("[0-9]{15}")));
+    ui->abonentLine->setValidator(new QRegExpValidator(QRegExp("[0-9]{15}")));
     ui->port->setValidator(new QIntValidator());
 
     request_MN = requestBegin + " WHERE calledPartyNumber not like '380%"
@@ -181,7 +173,7 @@ void MainWindow::onStart()
                  "and calledPartyNumber  <> 303 and calledPartyNumber  <> 422 and calledPartyNumber <> 300 and calledPartyNumber not like '064%' "
                  "and calledPartyNumber <> 505  and calledPartyNumber <> 333 and calledPartyNumber <> 109 and calledPartyNumber not like '062%'";
 
-    abonentLine->setFocus();
+    ui->abonentLine->setFocus();
     connect(ui->aboutQt,&QAction::triggered,[=](){QMessageBox::aboutQt(this,"About Qt");});
     connect(ui->aboutAction_2,&QAction::triggered,[=](){
         QMessageBox messageBox(this);
@@ -191,16 +183,21 @@ void MainWindow::onStart()
         messageBox.exec();
     });
     connect(ui->actionChangelog,&QAction::triggered,[=](){
-        QMessageBox messageBox(this);
-        messageBox.setTextFormat(Qt::RichText);
-        messageBox.setText(aboutProgram(":/changelog"));
-        messageBox.setIcon(QMessageBox::Icon::Information);
-        messageBox.exec();
+        QWidget *widget = new QWidget();
+        widget->setWindowFlag(Qt::WindowType::Tool);
+        widget->setWindowTitle("Обновления");
+        QHBoxLayout *layout = new QHBoxLayout(this);
+        QTextBrowser *browser = new QTextBrowser(this);
+        browser->setText(aboutProgram(":/changelog"));
+        browser->setFixedWidth(500);
+        layout->addWidget(browser);
+        widget->setLayout(layout);
+        widget->show();
     });
-    connect(abonentLine,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
-    connect(IMEI,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
-    connect(IMEI,&MyLineEdit::letsGetEDR ,this,&MainWindow::on_showData_clicked );
-    connect(abonentLine,&MyLineEdit::letsGetEDR ,this,&MainWindow::on_getDataEDR_clicked );
+    connect(ui->abonentLine,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
+    connect(ui->IMEI ,&MyLineEdit::command, this, &MainWindow::on_showData_clicked);
+
+    connect(ui->abonentLine,&MyLineEdit::letsGetEDR ,this,&MainWindow::on_getDataEDR_clicked );
     connect(ui->chartButton,&QPushButton::clicked,this,&MainWindow::execAnalyseWithLoadChart);
     connect(copyAction,&QAction::triggered, [=]() {
         QTableView *currentTable;
@@ -246,6 +243,31 @@ void MainWindow::onStart()
 
     ui->chartButton->setMenu (customMenu);
 
+    connect(ui->actionCharger,&QAction::triggered,[=](){QProcess::startDetached("Charger.exe",{});});
+    connect(ui->actionLoadStats,&QAction::triggered,[=](){QProcess::startDetached("LoadStats.exe",{});});
+    connect(ui->actionMultiAlex,&QAction::triggered,[=](){QProcess::startDetached("MultiAlex.exe",{});});
+
+    connect(ui->abonentLocation, &MyLineEdit::command, [=](const QString location){
+        search->search(location);
+        connect(search, &GeoSearch::dataReady, [=](QStringList rbsList){
+           for (int i=0;i<rbsList.size();i++){
+               ui->listWidget->addItem(rbsList[i]);
+           }
+        });
+    });
+    connect(ui->listWidget, &QListWidget::doubleClicked, [=](const QModelIndex &index)
+    {
+        TelnetForCells *telnet = new TelnetForCells(this);
+        telnet->getLoadPerCell(index.data().toString());
+        connect(telnet,&TelnetForCells::dataReady,[=](QStringList cells){
+           for(int i=0;i<cells.size();i++){
+               LoadStateCheck *widgetLoad = new LoadStateCheck(cells[i]);
+               widgetLoad->show();
+           }
+        });
+        connect(telnet,&TelnetForCells::executed,telnet,&TelnetForCells::deleteLater);
+    });
+
 }
 
 void MainWindow::DbConnect()
@@ -286,8 +308,8 @@ void MainWindow::DbConnect()
 
 void MainWindow::on_showData_clicked()
 {
-    if(abonentLine->text().left(3)=="380")
-        abonentLine->setText(abonentLine->text().right(abonentLine->text().length()-3));
+    if(ui->abonentLine->text().left(3)=="380")
+        ui->abonentLine->setText(ui->abonentLine->text().right(ui->abonentLine->text().length()-3));
     if(!db.isOpen())
     {
         QMessageBox::information(this,"Error",db.lastError().text()+'\n'+model->query().lastError().text()+'\n'+db.driver()->lastError().text());
@@ -417,20 +439,22 @@ void MainWindow::on_showData_clicked()
        QMessageBox::information(this,"Info","Данные о международных вызовах сохранены в файле:\r\n"+filePath+"\r\nДанные о вызовах на военные номера в файле:\r\n"+filePathMilitary);
         SetModel(request);
         QApplication::setOverrideCursor(Qt::ArrowCursor);
+        ui->tableView->resizeRowsToContents();
+        ui->tableView->resizeColumnsToContents();
        return;
 
     }
     if(ui->radioButton_4->isChecked())
     {
         //Поиск по IMEI
-        if(IMEI->text().isEmpty())
+        if(ui->IMEI->text().isEmpty())
         {
             QMessageBox::warning(this,"Error","Пустой IMEI");
             QApplication::setOverrideCursor(Qt::ArrowCursor);
             return;
         }
 
-        QString request = requestBegin + " where tag='1' and callingSubscriberIMEI like '%"+IMEI->text()+"%' " + DateB()+";";
+        QString request = requestBegin + " where tag='1' and callingSubscriberIMEI like '%"+ui->IMEI->text()+"%' " + DateB()+";";
         model->setQuery(request,db);
         SetModel(request);
 
@@ -462,7 +486,7 @@ void MainWindow::on_showData_clicked()
 
          //Исходящие
 
-        if(abonentLine->text().isEmpty())
+        if(ui->abonentLine->text().isEmpty())
         {
             QMessageBox::warning (this,"Информация (CDR)","Введите номер для поиска");
             QApplication::setOverrideCursor(Qt::ArrowCursor);
@@ -470,15 +494,15 @@ void MainWindow::on_showData_clicked()
         }
 
         QString request;
-        abonentLine->text().isEmpty() ? request = requestBegin + " where tag='1' " +DateB()+";"
-                : request = requestBegin + " where tag='1' and (callingPartyNumber = '"+abonentLine->text()+"' or callingPartyNumber ='0"+abonentLine->text()+"' or callingPartyNumber ='380"+abonentLine->text()+"' )" + DateB()+";";
+        ui->abonentLine->text().isEmpty() ? request = requestBegin + " where tag='1' " +DateB()+";"
+                : request = requestBegin + " where tag='1' and (callingPartyNumber = '"+ui->abonentLine->text()+"' or callingPartyNumber ='0"+ui->abonentLine->text()+"' or callingPartyNumber ='380"+ui->abonentLine->text()+"' )" + DateB()+";";
 
         model->setQuery(request,db);
         SetModel(request);
 
         if(model->query().isSelect() && model->rowCount()>0)
         {
-            lastSelectedAbonent = abonentLine->text();
+            lastSelectedAbonent = ui->abonentLine->text();
             abonentAnalyse(2);
         }
 
@@ -488,7 +512,7 @@ void MainWindow::on_showData_clicked()
     {
         //Входящие
 
-        if(abonentLine->text().isEmpty())
+        if(ui->abonentLine->text().isEmpty())
         {
             QMessageBox::warning(this,"Информация (CDR)","Введите номер для поиска");
             QApplication::setOverrideCursor(Qt::ArrowCursor);
@@ -497,15 +521,15 @@ void MainWindow::on_showData_clicked()
 
         QString request;
 
-         abonentLine->text().isEmpty()?  request = requestBegin + " where tag='1' " +DateB()+";"
-                 :request = requestBegin + " where tag='1' and (calledPartyNumber = '380"+abonentLine->text()+
-                 "' or calledPartyNumber ='"+abonentLine->text()+"' or calledPartyNumber = '0"+abonentLine->text()+"') " + DateB()+";";
+         ui->abonentLine->text().isEmpty()?  request = requestBegin + " where tag='1' " +DateB()+";"
+                 :request = requestBegin + " where tag='1' and (calledPartyNumber = '380"+ui->abonentLine->text()+
+                 "' or calledPartyNumber ='"+ui->abonentLine->text()+"' or calledPartyNumber = '0"+ui->abonentLine->text()+"') " + DateB()+";";
         model->setQuery(request,db);
 
         SetModel(request);
         if(model->query().isSelect() && model->rowCount()>0)
         {
-            lastSelectedAbonent = abonentLine->text();
+            lastSelectedAbonent = ui->abonentLine->text();
             abonentAnalyse(1);
         }
 
@@ -515,7 +539,7 @@ void MainWindow::on_showData_clicked()
     {
         //Все вызовы
 
-        if(abonentLine->text().isEmpty())
+        if(ui->abonentLine->text().isEmpty())
         {
             QApplication::setOverrideCursor(Qt::ArrowCursor);
             QMessageBox::warning(this,"Информация (CDR)","Введите номер для поиска");
@@ -523,16 +547,16 @@ void MainWindow::on_showData_clicked()
         }
 
         QString request;
-         abonentLine->text().isEmpty() ? request = requestBegin + " where tag='1' " +DateB()+";" :
-                 request = requestBegin + " where tag = '1' and ((calledPartyNumber = '380"+abonentLine->text()+
-                 "' or calledPartyNumber = '0"+abonentLine->text()+"' or calledPartyNumber='"+abonentLine->text()+"') or (callingPartyNumber = '"
-                +abonentLine->text()+"' or callingPartyNumber='380"+abonentLine->text()+"' or callingPartyNumber='0"+abonentLine->text()+"')) " + DateB()+";";
+        ui->abonentLine->text().isEmpty() ? request = requestBegin + " where tag='1' " +DateB()+";" :
+                 request = requestBegin + " where tag = '1' and ((calledPartyNumber = '380"+ui->abonentLine->text()+
+                 "' or calledPartyNumber = '0"+ui->abonentLine->text()+"' or calledPartyNumber='"+ui->abonentLine->text()+"') or (callingPartyNumber = '"
+                +ui->abonentLine->text()+"' or callingPartyNumber='380"+ui->abonentLine->text()+"' or callingPartyNumber='0"+ui->abonentLine->text()+"')) " + DateB()+";";
         model->setQuery(request,db);
 
         SetModel(request);
         if(model->query().isSelect() && model->rowCount()>0)
         {
-            lastSelectedAbonent = abonentLine->text();
+            lastSelectedAbonent = ui->abonentLine->text();
         }
 
     }
@@ -757,10 +781,12 @@ void MainWindow::SetModel(QString request)
     ui->tableView->setModel(sortedModel);
     ui->label_7->setText("Строк(Вызовов): "+QString::number(model->rowCount()));
     ui->tableView->resizeColumnsToContents();
+    ui->tableView->resizeRowsToContents();
     ui->tableViewEDR->resizeRowsToContents();
     ui->tableViewEDR->resizeColumnsToContents();
     QApplication::setOverrideCursor(Qt::ArrowCursor);
     ui->query->setText(request);
+
     GetTime();
 }
 
@@ -775,6 +801,7 @@ void MainWindow::on_connect_clicked()
     db.setUserName(ui->login->text());
     db.setPassword(ui->password->text());
     db.open();
+    qDebug() << "Ошибка при сборке/установке проекта Report (комплект: Desktop Qt 5.5.1 MSVC2012 32bit";
     if(db.isOpen())
     {
         ui->statusBar->showMessage("Статус соединения с БД: Соединение установлено",5000);
@@ -813,7 +840,7 @@ void MainWindow::on_connect_clicked()
 void MainWindow::SaveToFile(QString a)
 {
     QString fileName;
-    a == "Абонент" ? fileName=" Abonent " +abonentLine->text() : a== "Найти IMEI"? fileName = " IMEI "+IMEI->text()+" " : a=="Россия"? fileName = " Russia" : a=="Украина"?
+    a == "Абонент" ? fileName=" Abonent " +ui->abonentLine->text() : a== "Найти IMEI"? fileName = " IMEI "+ui->IMEI->text()+" " : a=="Россия"? fileName = " Russia" : a=="Украина"?
                 fileName = " Ukraine": a=="На городские (064)"? fileName = " City (064)" : fileName = " MN";
 
     if(a=="Абонент")
@@ -921,25 +948,25 @@ void MainWindow::on_radioButton_clicked()
 {
 
     ui->comboBox->setEnabled(false);
-    IMEI->setEnabled(false);
+    ui->IMEI->setEnabled(false);
 
-    abonentLine->setEnabled(true);
+    ui->abonentLine->setEnabled(true);
     ui->outgoing->setEnabled(true);
     ui->incoming->setEnabled(true);
     ui->all_calls->setEnabled(true);
     ui->saveToFile->setEnabled(true);
-    abonentLine->setFocus();
+    ui->abonentLine->setFocus();
 
 }
 
 void MainWindow::on_radioButton_5_clicked()
 {
     ui->comboBox->setEnabled(true);
-    abonentLine->setDisabled(true);
+    ui->abonentLine->setDisabled(true);
     ui->outgoing->setDisabled(true);
     ui->all_calls->setDisabled(true);
     ui->incoming->setDisabled(true);
-    IMEI->setDisabled(true);
+    ui->IMEI->setDisabled(true);
     ui->comboBox->setFocus();
     if(ui->comboBox->currentIndex()==2) ui->saveToFile->setDisabled(true);
 }
@@ -947,13 +974,13 @@ void MainWindow::on_radioButton_5_clicked()
 void MainWindow::on_radioButton_4_clicked()
 {
     ui->comboBox->setDisabled(true);
-    abonentLine->setDisabled(true);
+    ui->abonentLine->setDisabled(true);
     ui->outgoing->setDisabled(true);
     ui->all_calls->setDisabled(true);
     ui->incoming->setDisabled(true);
-    IMEI->setDisabled(false);
+    ui->IMEI->setDisabled(false);
     ui->saveToFile->setEnabled(true);
-    IMEI->setFocus();
+    ui->IMEI->setFocus();
 }
 
 void MainWindow::on_oneDay_clicked()
@@ -1070,8 +1097,8 @@ void MainWindow::on_pastePB_clicked()
     QString paste = QApplication::clipboard()->text();
     if(paste.length()<15)
     {
-        if(paste[0]=='3') abonentLine->setText(paste.right(9));
-        else abonentLine->setText(paste);
+        if(paste[0]=='3') ui->abonentLine->setText(paste.right(9));
+        else ui->abonentLine->setText(paste);
     }
 }
 
@@ -1260,12 +1287,12 @@ void MainWindow::actionChartButtonTriggered()
 {
     QAction *action = qobject_cast<QAction *> (sender());
 
-    if(lastSelectedButton == action && lastSelectedNumber == abonentLine->text ()){
+    if(lastSelectedButton == action && lastSelectedNumber == ui->abonentLine->text ()){
         analyse->showMaximized ();
         return;
     }
     else{
-        lastSelectedNumber = abonentLine->text ();
+        lastSelectedNumber = ui->abonentLine->text ();
         lastSelectedButton = action;
     }
 
@@ -1373,7 +1400,7 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 
 void MainWindow::on_getDataEDR_clicked()
 {
-        if(abonentLine->text ().isEmpty ()){
+        if(ui->abonentLine->text ().isEmpty ()){
             QMessageBox::warning (this,"Warning","Введите номер для поиска",QMessageBox::StandardButton::Ok);
             return;
         }
@@ -1383,7 +1410,7 @@ void MainWindow::on_getDataEDR_clicked()
             QApplication::setOverrideCursor (Qt::WaitCursor);
             QString request = "select datecharge,eventidentity,result,radiotype,typerau,intrarautype"
                               ",gsmcause,discreason,rai,cellidorsai,sac,msisdn,imsi,ptmsi,hlrnumber,sizeapn,apn,oldrai,negotiatedqos  "
-                              "from edr where msisdn = '380"+abonentLine->text()+"' order by datecharge";
+                              "from edr where msisdn = '380"+ui->abonentLine->text()+"' order by datecharge";
             edr_model->setQuery(request,dataBaseEDR);
 
             QSortFilterProxyModel *sortedModel = new QSortFilterProxyModel(this);
@@ -1435,10 +1462,10 @@ void MainWindow::on_tableViewEDR_customContextMenuRequested(const QPoint &pos)
 
 void MainWindow::on_regButton_clicked()
 {
-    if(!abonentLine->text().isEmpty() && abonentLine->text().length() >= 9){
+    if(!ui->abonentLine->text().isEmpty() && ui->abonentLine->text().length() >= 9){
         QMessageBox messageBox(this);
         messageBox.setText("Вы уверенны, что хотите перерегистрировать абонента "+
-                           abonentLine->text()+"?");
+                           ui->abonentLine->text()+"?");
         messageBox.setStandardButtons(QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel);
         auto resultCode = messageBox.exec();
         if(resultCode == QMessageBox::StandardButton::Ok){
@@ -1446,7 +1473,7 @@ void MainWindow::on_regButton_clicked()
             connect(telnet,&TelnetRegister::errorCatched, [=](const QString errorText){QMessageBox::critical(this,"Неуспешная операция","Ошибка:"+errorText);});
             connect(telnet,&TelnetRegister::successed, [=](){QMessageBox::information(this,"Успешная операция","Абонент успешно перерегистрирован.");});
             connect(telnet,&TelnetRegister::executed,telnet,&TelnetRegister::deleteLater);
-            telnet->reRegisterAbonent(abonentLine->text());
+            telnet->reRegisterAbonent(ui->abonentLine->text());
         }
 
     } else {
@@ -1465,14 +1492,34 @@ QString MainWindow::aboutProgram(const QString filepath) const
 
 void MainWindow::on_printProfile_clicked()
 {
-    if(!abonentLine->text().isEmpty() && abonentLine->text().length() >= 9){
+    if(!ui->abonentLine->text().isEmpty() && ui->abonentLine->text().length() >= 9){
             TelnetRegister *telnet = new TelnetRegister;
             connect(telnet,&TelnetRegister::errorCatched, [=](const QString errorText){QMessageBox::critical(this,"Неуспешная операция","Ошибка:"+errorText);});
-            connect(telnet,&TelnetRegister::profileReady, [=](const QString print){QMessageBox::information(this,"Профиль абонента "+abonentLine->text(),print);});
+            connect(telnet,&TelnetRegister::profileReady, [=](const QString print){QMessageBox::information(this,"Профиль абонента "+ui->abonentLine->text(),print);});
             connect(telnet,&TelnetRegister::executed,telnet,&TelnetRegister::deleteLater);
-            telnet->printProfileAbonent(abonentLine->text());
+            telnet->printProfileAbonent(ui->abonentLine->text());
 
 
+    } else {
+        QMessageBox::warning(this,"Warning","Введенный вами номер короче необходимого.\nМинимальная длинна составляет 9 цифр.");
+    }
+}
+
+void MainWindow::on_changePdpcp_clicked()
+{
+    if(!ui->abonentLine->text().isEmpty() && ui->abonentLine->text().length() >= 9){
+        QMessageBox messageBox(this);
+        messageBox.setText("Вы уверенны, что хотите изменить тариф абонента "+
+                           ui->abonentLine->text()+"?");
+        messageBox.setStandardButtons(QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel);
+        auto resultCode = messageBox.exec();
+        if(resultCode == QMessageBox::StandardButton::Ok){
+            TelnetRegister *telnet = new TelnetRegister;
+            connect(telnet,&TelnetRegister::errorCatched, [=](const QString errorText){QMessageBox::critical(this,"Неуспешная операция","Ошибка:"+errorText);});
+            connect(telnet,&TelnetRegister::successed, [=](){QMessageBox::information(this,"Успешная операция","Тариф сменён.");});
+            connect(telnet,&TelnetRegister::executed,telnet,&TelnetRegister::deleteLater);
+            telnet->changePDPCP(ui->abonentLine->text());
+        }
     } else {
         QMessageBox::warning(this,"Warning","Введенный вами номер короче необходимого.\nМинимальная длинна составляет 9 цифр.");
     }

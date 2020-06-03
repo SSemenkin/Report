@@ -22,6 +22,7 @@
 #include <QThread>
 #include <QMap>
 #include <QSortFilterProxyModel>
+#include <QProcess>
 #include "xlsxdocument.h"
 
 
@@ -30,6 +31,9 @@
 #include "mylineedit.h"
 #include "settings.h"
 #include "telnet/telnetregister.h"
+#include "maps/geosearch.h"
+#include "telnet/telnetforcells.h"
+#include "loadstatecheck.h"
 
 
 
@@ -127,6 +131,8 @@ private slots:
 
     void on_printProfile_clicked();
 
+    void on_changePdpcp_clicked();
+
 private:
 
 
@@ -148,9 +154,6 @@ private:
 
     bool fromCallStat=false;
 
-    MyLineEdit *abonentLine;
-
-    MyLineEdit *IMEI;
 
     QCompleter *completer;
 
@@ -170,6 +173,7 @@ private:
 
     QAction* lastSelectedButton;
 
+    GeoSearch *search;
 
 
 

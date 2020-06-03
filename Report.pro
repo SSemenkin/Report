@@ -42,9 +42,12 @@ SOURCES += \
         loadstatecheck.cpp \
         main.cpp \
         mainwindow.cpp \
+        maps/geosearch.cpp \
         mylineedit.cpp \
+        nearcells.cpp \
         qtcopytableview.cpp \
         settings.cpp \
+        telnet/telnetforcells.cpp \
         telnet/telnetregister.cpp \
         textedit.cpp
 
@@ -57,15 +60,19 @@ HEADERS += \
         customslice.h \
         loadstatecheck.h \
         mainwindow.h \
+        maps/geosearch.h \
         mylineedit.h \
+        nearcells.h \
         qtcopytableview.h \
         settings.h \
+        telnet/telnetforcells.h \
         telnet/telnetregister.h \
         textedit.h
 
 FORMS += \
         callstat.ui \
         mainwindow.ui \
+        nearcells.ui \
         settings.ui
 
 # Default rules for deployment.
