@@ -18,15 +18,18 @@ public:
     void getLoadPerCell(const QString rsite);
 
 signals:
-    void dataReady(QStringList);
+    void errorCatched(const QString errorText);
+    void dataReady(QStringList cellNames, QStringList prints);
     void executed();
 
 private slots:
     void readDataFromController();
     QString subString(const QString text, const QString buffer);
+    QStringList parseCellList(QString answer);
 private:
     uint currentCell = 0;
-    QStringList forSignal;
+    bool firstFlag = false;
+    QStringList prints;
     QString cellText;
     QString rbsName;
     QStringList cellNames;

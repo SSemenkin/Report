@@ -33,7 +33,7 @@
 #include "telnet/telnetregister.h"
 #include "maps/geosearch.h"
 #include "telnet/telnetforcells.h"
-#include "loadstatecheck.h"
+#include "loadwidget/qloadwidget.h"
 
 
 
@@ -132,6 +132,9 @@ private slots:
     void on_printProfile_clicked();
 
     void on_changePdpcp_clicked();
+
+
+    void on_locationUpdate_clicked();
 
 private:
 

@@ -23,7 +23,16 @@ void TelnetForCells::getLoadPerCell(const QString rsite)
 void TelnetForCells::readDataFromController()
 {
     QString responce = telnet->readAll().toLower();
-    qDebug() << responce;
+    if(!subString(responce,"not accepted").isEmpty()){
+        emit errorCatched(responce);
+        emit executed();
+        return;
+    }
+    if(!subString(responce, "fault code").isEmpty()){
+        emit errorCatched(responce);
+        emit executed();
+        return;
+    }
     if(!cellNames.size()) {
         if(subString(responce,"ogin name:").length()){
             telnet->write(QString(userNameBSC+"\r\n").toUtf8());
@@ -35,64 +44,46 @@ void TelnetForCells::readDataFromController()
             telnet->write("mml -a\r\n");
         } else if(subString(responce, "bsc").length()){
             telnet->write(QString("rxtcp:moty=rxotg,cell="+rbsName+"a;\r\n").toUtf8());
-        } else if(subString(responce,"end").length() && subString(responce,"xtcp").length()){
-            tg = subString(responce,"xotg-").left(8).right(3).toInt();
+        } else if(subString(responce,"end").length() && subString(responce,"radio x-ceiver administration").length() &&!firstFlag){
+            tg = subString(responce,"rxotg-").left(9).right(3).toInt();
             telnet->write(QString("rxtcp:mo=rxotg-"+QString::number(tg)+";\r\n").toUtf8());
-        } else if(subString(responce, "end").length() && subString(responce,"tg to channel group connection").length()){
-            cellNames << subString(responce,"lu").left(7);
-            if(!subString(cellNames[0],"lu").left(7).isEmpty()){
-                cellNames << subString(cellNames[0],"lu").left(7);
-                if(!subString(cellNames[1],"lu").left(7).isEmpty())
-                {
-                    cellNames << subString(cellNames[1],"lu").left(7);
-                }
-            }
-            qDebug() << "CELLNAMES" << cellNames;
-            telnet->write(QString("rlcrp:cell = " + cellNames[currentCell]+",detail;\r\n").toUtf8());
-            forSignal << cellNames[currentCell];
+            firstFlag = !firstFlag;
+        } else if(subString(responce, "end").length() && subString(responce,"tg to channel group connection").length() && firstFlag){
+            cellNames = parseCellList(responce);
+            telnet->write(QString("rlcrp:cell = " + cellNames[currentCell]+";\r\n").toUtf8());
+
         }
     } else  {
         cellText +=responce;
         if(subString(responce,"end").length() && currentCell == 0) {
-            QFile file(cellNames[currentCell]+".txt");
-            file.open(QIODevice::WriteOnly);
-            file.write(cellText.toUtf8());
-            file.close();
+            prints << cellText;
             cellText.clear();
 
             currentCell++;
-            if(currentCell < cellNames.size() )
+            if((int)currentCell < cellNames.size() )
             {
-                telnet->write(QString("rlcrp:cell = " + cellNames[currentCell]+",detail;\r\n").toUtf8());
-                forSignal << cellNames[currentCell];
+                telnet->write(QString("rlcrp:cell = " + cellNames[currentCell]+";\r\n").toUtf8());
             } else {
-                emit dataReady(forSignal);
+                emit dataReady(cellNames,prints);
                 emit executed();
             }
         } else if(subString(responce,"end").length() && currentCell == 1){
-            QFile file(cellNames[currentCell]+".txt");
-            file.open(QIODevice::WriteOnly);
-            file.write(cellText.toUtf8());
-            file.close();
+            prints << cellText;
             cellText.clear();
 
             currentCell++;
-            if(currentCell < cellNames.size() )
+            if((int)currentCell < cellNames.size() )
             {
-                telnet->write(QString("rlcrp:cell = " + cellNames[currentCell]+",detail;\r\n").toUtf8());
-                forSignal << cellNames[currentCell];
+                telnet->write(QString("rlcrp:cell = " + cellNames[currentCell]+";\r\n").toUtf8());
             } else  {
-                emit dataReady(forSignal);
+                emit dataReady(cellNames,prints);
                 emit executed();
             }
         } else if(subString(responce,"end").length() && currentCell == 2)
         {
-            QFile file(cellNames[currentCell]+".txt");
-            file.open(QIODevice::WriteOnly);
-            file.write(cellText.toUtf8());
-            file.close();
+            prints << cellText;
             cellText.clear();
-            emit dataReady(forSignal);
+            emit dataReady(cellNames,prints);
             emit executed();
         }
     }
@@ -102,10 +93,21 @@ void TelnetForCells::readDataFromController()
 QString TelnetForCells::subString(const QString text, const QString buffer)
 {
     for(int i=0;i<text.length()-buffer.length();i++){
-        QString tmp = text.right(text.length()-1-i).left(buffer.length());
+        QString tmp = text.right(text.length()-i).left(buffer.length());
         if(tmp == buffer){
-            return text.right(text.length()-1-i);
+            return text.right(text.length()-i);
         }
     }
     return "";
+}
+
+QStringList TelnetForCells::parseCellList(QString answer)
+{
+    QStringList result;
+    answer = subString(answer,"lu");
+    result << answer.left(7);
+    subString(answer.split("\r\n")[1],"lu");
+    if(!subString(answer.split("\r\n")[1],"lu").isEmpty()) result << subString(answer.split("\r\n")[1],"lu").left(7);
+    if(!subString(answer.split("\r\n")[2],"lu").isEmpty()) result << subString(answer.split("\r\n")[2],"lu").left(7);
+    return result;
 }

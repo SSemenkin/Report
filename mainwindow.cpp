@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     edr_model = new QSqlQueryModel(this);
     model = new QSqlQueryModel(this);
     query_model = new QSqlQueryModel(this);
+
     onStart();
     DbConnect();
     AbonentSelected = false;
@@ -131,7 +132,7 @@ void MainWindow::onStart()
     ui->regButton->setIcon(QIcon(":/images/refresh.png"));
     ui->printProfile->setIcon(QIcon(":/images/profile.png"));
     ui->changePdpcp->setIcon(QIcon(":/images/changeProfile.png"));
-
+    ui->locationUpdate->setIcon(QIcon(":/images/maps.png"));
 
     ui->radioButton->setChecked(true);
     ui->outgoing->setToolTip("Указывать номер нужно в формате 72XXXXXXX");
@@ -183,16 +184,11 @@ void MainWindow::onStart()
         messageBox.exec();
     });
     connect(ui->actionChangelog,&QAction::triggered,[=](){
-        QWidget *widget = new QWidget();
-        widget->setWindowFlag(Qt::WindowType::Tool);
-        widget->setWindowTitle("Обновления");
-        QHBoxLayout *layout = new QHBoxLayout(this);
-        QTextBrowser *browser = new QTextBrowser(this);
-        browser->setText(aboutProgram(":/changelog"));
-        browser->setFixedWidth(500);
-        layout->addWidget(browser);
-        widget->setLayout(layout);
-        widget->show();
+        QMessageBox messageBox(this);
+        messageBox.setTextFormat(Qt::RichText);
+        messageBox.setText(aboutProgram(":/changelog"));
+        messageBox.setIcon(QMessageBox::Icon::Information);
+        messageBox.exec();
     });
     connect(ui->abonentLine,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
     connect(ui->IMEI ,&MyLineEdit::command, this, &MainWindow::on_showData_clicked);
@@ -250,6 +246,7 @@ void MainWindow::onStart()
     connect(ui->abonentLocation, &MyLineEdit::command, [=](const QString location){
         search->search(location);
         connect(search, &GeoSearch::dataReady, [=](QStringList rbsList){
+           ui->listWidget->clear();
            for (int i=0;i<rbsList.size();i++){
                ui->listWidget->addItem(rbsList[i]);
            }
@@ -259,13 +256,15 @@ void MainWindow::onStart()
     {
         TelnetForCells *telnet = new TelnetForCells(this);
         telnet->getLoadPerCell(index.data().toString());
-        connect(telnet,&TelnetForCells::dataReady,[=](QStringList cells){
-           for(int i=0;i<cells.size();i++){
-               LoadStateCheck *widgetLoad = new LoadStateCheck(cells[i]);
-               widgetLoad->show();
-           }
+        connect(telnet,&TelnetForCells::dataReady,[=](const QStringList cells,const QStringList prints){
+           QLoadWidget *widget = new QLoadWidget();
+           widget->setData(cells,prints);
+           widget->show();
         });
         connect(telnet,&TelnetForCells::executed,telnet,&TelnetForCells::deleteLater);
+        connect(telnet,&TelnetForCells::errorCatched, [=] (const QString errorText){
+            QMessageBox::critical(this,"Ошибка получения данных",errorText);
+        });
     });
 
 }
@@ -1523,4 +1522,15 @@ void MainWindow::on_changePdpcp_clicked()
     } else {
         QMessageBox::warning(this,"Warning","Введенный вами номер короче необходимого.\nМинимальная длинна составляет 9 цифр.");
     }
+}
+
+void MainWindow::on_locationUpdate_clicked()
+{
+    search->search(ui->abonentLocation->text());
+    connect(search, &GeoSearch::dataReady, [=](QStringList rbsList){
+       ui->listWidget->clear();
+       for (int i=0;i<rbsList.size();i++){
+           ui->listWidget->addItem(rbsList[i]);
+       }
+    });
 }

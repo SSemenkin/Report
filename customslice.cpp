@@ -119,7 +119,7 @@ void CustomSlice::readData() //Telnet Connection
 {
 
     QString all = socket->readAll();
-    //qDebug() << all;
+    qDebug() << all;
     if(subString(all,"login"))
     {
         QString command = Login+"\r\n";

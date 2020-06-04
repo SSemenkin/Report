@@ -27,7 +27,7 @@ LoadStateCheck::LoadStateCheck(QString str)
             is_msp = true;
         }
         if(is_begin) allTextCell.push_back(buffer);
-        if(buffer.left(2)=="LU")
+        if(buffer.left(2)=="lu" || buffer.left(2)=="LU")
         {
             for(int i=0;i<buffer.length();i++)
             {
@@ -71,6 +71,8 @@ LoadStateCheck::LoadStateCheck(QString str)
 
 bool LoadStateCheck::subString(QString buff, QString findStr)
 {
+    buff = buff.toLower();
+    findStr = findStr.toLower();
     for(int i=0;i<buff.length()-(findStr.length()-1);i++)
     {
         QString substring;
