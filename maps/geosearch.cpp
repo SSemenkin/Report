@@ -28,7 +28,7 @@ void GeoSearch::receiveData(QNetworkReply *data)
 {
     try {
         QPair<long double, long double> point = getPoint(data->readAll());
-        qDebug() << search_nearest_objects(point.first, point.second);
+        search_nearest_objects(point.first, point.second);
     } catch (...) {
         qDebug() << "Error reply";
     }
@@ -104,6 +104,7 @@ void GeoSearch::read_rbs_choords()
     QFile file("rbs.txt");
     file.open(QIODevice::ReadOnly);
     try {
+
         while (!file.atEnd()){
             QStringList line = get_elements(file.readLine());
             rbs[line[0]] = QPair<long double,long double>(line[1].toDouble(),line[2].toDouble());

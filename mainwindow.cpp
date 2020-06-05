@@ -6,8 +6,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
-    search = new GeoSearch(this);
+    search = new GeoSearch();
     settings = new Settings();
     edr_model = new QSqlQueryModel(this);
     model = new QSqlQueryModel(this);
@@ -29,6 +28,7 @@ MainWindow::~MainWindow()
             db.close();
         }
     }
+
     delete completer;
     delete customMenu;
     delete actionDay;
@@ -192,7 +192,6 @@ void MainWindow::onStart()
     });
     connect(ui->abonentLine,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
     connect(ui->IMEI ,&MyLineEdit::command, this, &MainWindow::on_showData_clicked);
-
     connect(ui->abonentLine,&MyLineEdit::letsGetEDR ,this,&MainWindow::on_getDataEDR_clicked );
     connect(ui->chartButton,&QPushButton::clicked,this,&MainWindow::execAnalyseWithLoadChart);
     connect(copyAction,&QAction::triggered, [=]() {
@@ -255,7 +254,9 @@ void MainWindow::onStart()
     connect(ui->listWidget, &QListWidget::doubleClicked, [=](const QModelIndex &index)
     {
         TelnetForCells *telnet = new TelnetForCells(this);
-        telnet->getLoadPerCell(index.data().toString());
+        connect(telnet,&TelnetForCells::settingsMissed,[=](QStringList miss){
+            QMessageBox::warning(this,"Ошибка выполения операции", "Настройки для BSC не были найдены:\n"+miss.join("\n"));
+        });
         connect(telnet,&TelnetForCells::dataReady,[=](const QStringList cells,const QStringList prints){
            QLoadWidget *widget = new QLoadWidget();
            widget->setData(cells,prints);
@@ -265,6 +266,7 @@ void MainWindow::onStart()
         connect(telnet,&TelnetForCells::errorCatched, [=] (const QString errorText){
             QMessageBox::critical(this,"Ошибка получения данных",errorText);
         });
+        telnet->getLoadPerCell(index.data().toString());
     });
 
 }
@@ -1533,4 +1535,9 @@ void MainWindow::on_locationUpdate_clicked()
            ui->listWidget->addItem(rbsList[i]);
        }
     });
+}
+
+void MainWindow::on_settingBSC_clicked()
+{
+    settings->exec();
 }

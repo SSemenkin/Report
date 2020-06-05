@@ -7,6 +7,7 @@ TelnetForCells::TelnetForCells(QObject *parent) : QObject(parent)
     ipBSC = settings->getIP();
     userNameBSC = settings->getLogin();
     passwordBSC = settings->getPassword();
+
     connect (telnet, &QTcpSocket::readyRead, this, &TelnetForCells::readDataFromController);
 }
 TelnetForCells::~TelnetForCells()
@@ -16,6 +17,15 @@ TelnetForCells::~TelnetForCells()
 
 void TelnetForCells::getLoadPerCell(const QString rsite)
 {
+    QStringList missedSettings;
+    if(ipBSC.isEmpty()) missedSettings << "IP адрес контроллера";
+    if(userNameBSC.isEmpty()) missedSettings << "Имя пользователя";
+    if(passwordBSC.isEmpty()) missedSettings << "Пароль пользователя";
+    if(!missedSettings.isEmpty()){
+        emit settingsMissed(missedSettings);
+        emit executed();
+        return;
+    }
     rbsName = rsite;
     telnet->connectToHost(ipBSC,23);
 }

@@ -7,7 +7,7 @@ Settings::Settings(QWidget *parent) :
 {
 
     ui->setupUi(this);
-    this->setWindowTitle("Connection Settings");
+    this->setWindowTitle("Настройки подключения");
     this->setWindowFlag(Qt::WindowContextHelpButtonHint,false);
     settings = new QSettings("Smena LTD.","Report",this);
 

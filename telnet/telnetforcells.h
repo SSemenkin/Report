@@ -21,6 +21,7 @@ signals:
     void errorCatched(const QString errorText);
     void dataReady(QStringList cellNames, QStringList prints);
     void executed();
+    void settingsMissed(QStringList);
 
 private slots:
     void readDataFromController();

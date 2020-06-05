@@ -43,6 +43,8 @@ signals:
 
     void dataRecieved(int);
 
+    void dataBaseDontOpen();
+
 private:
 
     bool openLocalDataBase();

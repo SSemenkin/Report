@@ -85,6 +85,7 @@ void AnalyseData::GenerateChart()
                 QSqlDatabase::removeDatabase ("QMYSQL_detail_connection");
             }
             connect(threadToSQLDatabase,&QThread::started,sepChartClass,&ChartBySeparateThread::getChargeOf2GCellsFromMySQL);
+            connect(sepChartClass,&ChartBySeparateThread::dataBaseDontOpen,[=](){is_db_open = false;});
             connect(sepChartClass,&ChartBySeparateThread::dataRecieved,dataBar,&QProgressBar::setValue);
             connect(sepChartClass,&ChartBySeparateThread::finished,this,&AnalyseData::storeResult);
             threadToSQLDatabase->start();
@@ -432,7 +433,9 @@ void AnalyseData::repaintModel()
     timer->stop();
     label->setVisible(false);
     dataBar->setVisible(false);
-    chartsLayout->addWidget(buildLineCharts(returnedData));
+    if(is_db_open)
+        chartsLayout->addWidget(buildLineCharts(returnedData));
+    else QMessageBox::warning(this,"Warning","Не удалось открыть БД с данными загрузки");
 }
 
 void AnalyseData::changeText()

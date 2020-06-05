@@ -58,6 +58,8 @@ QVector<cell2G> ChartBySeparateThread::getChargeOf2GCellsFromMySQL()
         delete chargeModel;
         mysqldataBase.close();
 
+    } else {
+         emit dataBaseDontOpen();
     }
     returneD = result;
 

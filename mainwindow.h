@@ -136,6 +136,8 @@ private slots:
 
     void on_locationUpdate_clicked();
 
+    void on_settingBSC_clicked();
+
 private:
 
 

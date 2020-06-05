@@ -92,7 +92,7 @@ signals:
 
 private:
 
-
+    bool is_db_open = true;
 
     QSqlQueryModel *hideModel,*hideEdrModel;
     QString currAbon,interval;
