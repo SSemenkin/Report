@@ -112,7 +112,6 @@ void MainWindow::onStart()
     ui->abonentLine->setFixedWidth(250);
     ui->pastePB->setFixedWidth(50);
 
-    ui->showData->setShortcut(QKeySequence(tr("Ctrl+L")));
     ui->pastePB->setIcon(QIcon(":/images/xCopy.png"));
     ui->pushButton_2->setIcon(QIcon(":/images/execute.png"));
     ui->pushButton_3->setIcon(QIcon(":/images/clear-symbol.png"));
@@ -184,11 +183,11 @@ void MainWindow::onStart()
         messageBox.exec();
     });
     connect(ui->actionChangelog,&QAction::triggered,[=](){
-        QMessageBox messageBox(this);
-        messageBox.setTextFormat(Qt::RichText);
-        messageBox.setText(aboutProgram(":/changelog"));
-        messageBox.setIcon(QMessageBox::Icon::Information);
-        messageBox.exec();
+        QTextBrowser *browser = new QTextBrowser;
+        browser->setHtml(aboutProgram(":/changelog"));
+        browser->resize(600,300);
+        browser->show();
+
     });
     connect(ui->abonentLine,&MyLineEdit::command,this,&MainWindow::on_showData_clicked);
     connect(ui->IMEI ,&MyLineEdit::command, this, &MainWindow::on_showData_clicked);
@@ -204,7 +203,7 @@ void MainWindow::onStart()
             for (auto i = range.top(); i <= range.bottom(); ++i){
                 QStringList rowContents;
                 for (auto j = range.left(); j <= range.right(); ++j)
-                rowContents << currentTable->model()->index(i,j).data().toString();
+                    rowContents << currentTable->model()->index(i,j).data().toString();
                 text += rowContents.join("\t");
                 text += "\n";
             }

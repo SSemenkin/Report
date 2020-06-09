@@ -49,6 +49,7 @@ SOURCES += \
         settings.cpp \
         telnet/telnetforcells.cpp \
         telnet/telnetregister.cpp \
+        telnet/telnetseparatecell.cpp \
         textedit.cpp
 
 HEADERS += \
@@ -67,6 +68,7 @@ HEADERS += \
         settings.h \
         telnet/telnetforcells.h \
         telnet/telnetregister.h \
+        telnet/telnetseparatecell.h \
         textedit.h
 
 FORMS += \

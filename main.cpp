@@ -9,7 +9,6 @@ int main(int argc, char *argv[])
     QApplication::setStyle(QStyleFactory::create("Fusion"));
     QApplication::setOrganizationName("SmenaLTD.");
     QApplication::setApplicationName("Report");
-    QApplication::setApplicationVersion("0.8.9");
     QApplication::setApplicationDisplayName("Report");
 
     MainWindow w;

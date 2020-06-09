@@ -65,8 +65,6 @@ private slots:
 
     void setCommands(int);
 
-    void showSettingsWidget();
-
     void ShowLoad(QString cell);
 
     QChartView *buildPieChart();

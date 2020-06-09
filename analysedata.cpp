@@ -49,7 +49,7 @@ void AnalyseData::GenerateChart()
     bar->addMenu(menu);
     QAction *action = new QAction("Настройки подключения к BSC",this);
     menu->addAction(action);
-    connect(action,&QAction::triggered,this,&AnalyseData::showSettingsWidget);
+    QObject::connect(action , &QAction::triggered , settings, &Settings::exec);
     globalLay->addWidget(bar);
     globalLay->addLayout(chartsLayout);
 
@@ -152,33 +152,26 @@ void AnalyseData::setCommands(int value)
     }
 }
 
-void AnalyseData::showSettingsWidget()
-{
-    Settings a;
-    auto result = a.exec();
-    if(result == QDialog::Accepted)
-    {
-        for(int i=0;i<customSlices.size();i++)
-            customSlices[i]->loadSettings();
-    }
-}
 
 void AnalyseData::ShowLoad(QString cell)
 {
-    if(cell[0]=='L')
-     for(int i=0;i<loadSeriesV.size();i++)
-     {
-         if(loadSeriesV[i]->name() == cell)
-         {
+    if(cell[0]=='L'){
+     for(int i=0;i<loadSeriesV.size();i++){
+         if(loadSeriesV[i]->name() == cell){
              loadSeriesV[i]->setOpacity(1);
              interSeries[i]->setOpacity(1);
+         } else {
+             interSeries[i]->setOpacity(0.1);
+             loadSeriesV[i]->setOpacity(0.1);
          }
-         else
-         {
-             interSeries[i]->setOpacity(0.2);
-             loadSeriesV[i]->setOpacity(0.2);
-         }
-     }
+        }
+    }
+    else {
+        for( int i=0;i<loadSeriesV.size();i++){
+            interSeries[i]->setOpacity(1);
+            loadSeriesV[i]->setOpacity(1);
+        }
+    }
 }
 
 QChartView *AnalyseData::buildPieChart()
@@ -211,9 +204,19 @@ QChartView *AnalyseData::buildPieChart()
         slice = new CustomSlice(chastoti[i].first,chastoti[i].second);
         customSlices.push_back(slice);
         connect(slice,&CustomSlice::sliceHovered,this,&AnalyseData::ShowLoad);
+        connect(slice,&CustomSlice::sliceUnHovered,[=](){
+            for(int i=0;i<loadSeriesV.size();i++){
+                loadSeriesV[i]->setOpacity(1.0);
+                interSeries[i]->setOpacity(1.0);
+            }
+        });
         slice->setLabelFont(font);
-        if((double(chastoti[i].second) / double(Size) * 100.0) < 5.0 )
+        if((double(chastoti[i].second) / double(Size) * 100.0) < 5.0 ){
             slice->setLabelPosition(QPieSlice::LabelOutside);
+
+           } else {
+                    slice->setLabelColor(QColor(Qt::white));
+            }
         *pieSeries << slice;
 
     }
@@ -329,8 +332,10 @@ QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
          for(int j=0;j<cells2G[i].dates.size();j++)
          {
 
+
              tmpSeries->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].charges[j]);
              tmpSeriesi->append(cells2G[i].dates[j].toMSecsSinceEpoch(),cells2G[i].inter[j]);
+
          }
          chargeChart->addSeries(tmpSeries);
          icmChart->addSeries(tmpSeriesi);
@@ -338,8 +343,13 @@ QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
          tmpSeries->attachAxis(axisY);
          tmpSeriesi->attachAxis(axisXi);
          tmpSeriesi->attachAxis(axisYi);
+         for(int colorCounter = 0;colorCounter < customSlices.size(); colorCounter++){
+             if(customSlices[colorCounter]->label() == tmpSeries->name()) {
+                 tmpSeries->setColor(customSlices[colorCounter]->color());
+                 tmpSeriesi->setColor(customSlices[colorCounter]->color());
+             }
+         }
     }
-
     QChartView *chartView = new QChartView(chargeChart);
     chartView->setRenderHint(QPainter::Antialiasing);
     QChartView *chartViewi = new QChartView(icmChart);

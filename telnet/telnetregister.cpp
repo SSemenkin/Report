@@ -6,8 +6,7 @@ TelnetRegister::TelnetRegister(QObject *parent) : QObject(parent)
     socket = new QTcpSocket(this);
     timer = new QTimer(this);
     connect(socket,&QTcpSocket::readyRead,this,&TelnetRegister::processAnswersFromHLR);
-    timer->setInterval(10000);
-    timer->start();
+    timer->start(15000);
     connect(timer,&QTimer::timeout,[=](){
         timer->stop();
         timer->deleteLater();
@@ -48,7 +47,6 @@ void TelnetRegister::processAnswersFromHLR()
 
 
     QString reply = socket->readAll().toLower();
-    qDebug() << reply;
     allOperationText += reply;
     ///AUTH
     if(reply.right(12) == "login name: "){
@@ -67,7 +65,6 @@ void TelnetRegister::processAnswersFromHLR()
     if(__behavior == OperationBehavior::ChangeSUD){
         if(!subString(reply,"end").isEmpty()){
            __pdpcp = subString(reply,"pdpcp-").left(7).right(1) == "1" ? "3" : "1";
-           qDebug() << __pdpcp;
            socket->write(QString("hgsdc:msisdn = "+__abonent+",sud=pdpcp-"+__pdpcp+";\r\n").toUtf8());
         }
         else if(!subString(reply,"ecuted").isEmpty() ){

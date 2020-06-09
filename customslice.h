@@ -32,14 +32,8 @@
 #include <QtCharts/QPieSlice>
 #include <QDebug>
 #include <QMessageBox>
-#include <QTimer>
-#include <QProcess>
-#include <QTcpSocket>
-
-
-
+#include "telnet/telnetseparatecell.h"
 #include "loadstatecheck.h"
-#include "settings.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -53,42 +47,14 @@ public:
 public:
     QBrush originalBrush();
 
-
-    void readData();
-
-    void writeFile(QString);
-
-    bool subString(QString buff, QString findStr);
-
 public Q_SLOTS:
     void showHighlight(bool show);
-
     void getData();
-
-    void loadSettings();
-
 signals:
-
     void sliceHovered(QString);
-
+    void sliceUnHovered();
 private:
-
-    bool is_tg = false;
-
-    QBrush m_originalBrush;
-
-    QString cell,cell_print,current_tg,msp_print;
-
-    LoadStateCheck *a;
-
-    QTcpSocket *socket;
-
-    bool is_cell_print = false;
-
-    bool is_msp_print = false;
-
-    QString IP,Login,Password;
-
+   QBrush m_originalBrush;
 
 };
 
