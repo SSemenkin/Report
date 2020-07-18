@@ -138,6 +138,8 @@ private slots:
 
     void on_settingBSC_clicked();
 
+    void on_actionLoadMaster_triggered();
+
 private:
 
 

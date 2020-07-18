@@ -15,9 +15,15 @@ TelnetSeparateCell::~TelnetSeparateCell()
 
 void TelnetSeparateCell::getData(TelnetSeparateCell::Operation choice,const QString cellName)
 {
-    ip = settings->getIP();
-    userName = settings->getLogin();
-    password = settings->getPassword();
+    if(isBSC03CELL(cellName)){
+        ip = "172.25.157.99";
+        userName = "administrator";
+        password = "Administrator1@";
+    } else {
+        ip = settings->getIP();
+        userName = settings->getLogin();
+        password = settings->getPassword();
+    }
     if(ip.isEmpty() || userName.isEmpty() || password.isEmpty()) {
         delete settings;
         emit missSettings();
@@ -58,6 +64,7 @@ void TelnetSeparateCell::readData()
 void TelnetSeparateCell::proccesingSeparateCell(QString text)
 {
     flag ? responce += text : responce +="";
+    qDebug() << text;
     if(subString(text,"login name:")){
         telnet->write(QString(userName + "\r\n").toUtf8());
     } else if(subString(text, "password:")){
@@ -66,7 +73,7 @@ void TelnetSeparateCell::proccesingSeparateCell(QString text)
         telnet->write(QString("\r\n").toUtf8());
     } else if(subString(text, "WINNT\\Profiles\\")) {
         telnet->write(QString("mml -a\r\n").toUtf8());
-    } else if(subString(text,"BSC01LUG")) {
+    } else if(subString(text,"BSC01LUG") || subString(text,"BSC3LUG")) {
         flag = !flag;
         telnet->write(QString("rlcrp:cell = "+cell+";\r\n").toUtf8());
     } else if(subString(responce,"end") && subString(responce,"CELL RESOURCES")) {
@@ -115,4 +122,13 @@ void TelnetSeparateCell::moveToFile(const QString content, const QString filePat
     file.open(QIODevice::WriteOnly | QIODevice::Truncate);
     file.write(content.toUtf8());
     file.close();
+}
+
+bool TelnetSeparateCell::isBSC03CELL(const QString cellName)
+{
+    QStringList cells = cellListBSC03.split(',');
+    for(int i=0;i<cells.size();i++){
+        if(cells[i] == cellName) return true;
+    }
+    return false;
 }

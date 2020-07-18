@@ -9,6 +9,7 @@
 #include <QVector>
 #include <QtSql>
 
+
 #include "settings.h"
 
 QT_CHARTS_USE_NAMESPACE

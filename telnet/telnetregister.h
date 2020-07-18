@@ -34,6 +34,7 @@ private:
     QString __abonent;
     QString __imsi;
     QString __pdpcp;
+    QString __caw;
     OperationBehavior __behavior;
     uint countCommands = 0;
 

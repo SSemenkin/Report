@@ -41,7 +41,7 @@ void QLoadWidget::updateModel()
 {
     for(int i = 0;i<cellPrints.size();i++){
         QTextBrowser *browser = new QTextBrowser(this);
-        browser->setText(cellPrints[i]);
+        browser->setText(cellPrints[i].toUpper());
         ui->tabWidget->addTab(browser,cellList[i]);
     }
 

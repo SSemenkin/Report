@@ -39,6 +39,7 @@ SOURCES += \
         charts/donutbreakdownchart.cpp \
         charts/mainslice.cpp \
         customslice.cpp \
+        influxdata.cpp \
         loadstatecheck.cpp \
         loadwidget/qloadwidget.cpp \
         main.cpp \
@@ -59,6 +60,7 @@ HEADERS += \
         charts/donutbreakdownchart.h \
         charts/mainslice.h \
         customslice.h \
+        influxdata.h \
         loadstatecheck.h \
         loadwidget/qloadwidget.h \
         mainwindow.h \

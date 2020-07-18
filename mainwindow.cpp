@@ -454,9 +454,11 @@ void MainWindow::on_showData_clicked()
             return;
         }
 
-        QString request = requestBegin + " where tag='1' and callingSubscriberIMEI like '%"+ui->IMEI->text()+"%' " + DateB()+";";
+        QString request = requestBegin + " where tag='1' and callingSubscriberIMEI = '"+ui->IMEI->text()+"' " + DateB()+";";
         model->setQuery(request,db);
+        if(!model->query().isSelect()) qDebug() << model->lastError().text();
         SetModel(request);
+
 
     }
     if(ui->radioButton_5->isChecked() && ui->comboBox->currentIndex()==3)
@@ -817,14 +819,7 @@ void MainWindow::on_connect_clicked()
         if(db.isOpen())
         {
             saveSettings();
-            if(ui->driverCombo->currentText() == "QPSQL")
-            {
-                openDatabaseEDR();
-            }
-            else
-            {
-                dataBaseEDR.close();
-            }
+            openDatabaseEDR();
             return;
         }
         else
@@ -1449,7 +1444,6 @@ void MainWindow::on_tableViewQuery_customContextMenuRequested(const QPoint &pos)
     copyMenu->popup(ui->tableViewQuery->mapToGlobal(pos));
 }
 
-
 void MainWindow::on_tableViewEDR_customContextMenuRequested(const QPoint &pos)
 {
     copyAction->setEnabled(false);
@@ -1458,7 +1452,6 @@ void MainWindow::on_tableViewEDR_customContextMenuRequested(const QPoint &pos)
     }
     copyMenu->popup(ui->tableViewEDR->mapToGlobal(pos));
 }
-
 
 void MainWindow::on_regButton_clicked()
 {
@@ -1539,4 +1532,9 @@ void MainWindow::on_locationUpdate_clicked()
 void MainWindow::on_settingBSC_clicked()
 {
     settings->exec();
+}
+
+void MainWindow::on_actionLoadMaster_triggered()
+{
+    QProcess::startDetached("QtLoadMaster.exe",{});
 }

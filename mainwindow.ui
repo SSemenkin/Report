@@ -1167,15 +1167,31 @@ padding-right:5px;
     <addaction name="menu_2"/>
    </widget>
    <widget class="QMenu" name="menu_4">
+    <property name="statusTip">
+     <string>Дополнительные утилиты</string>
+    </property>
     <property name="title">
      <string>&amp;Дополнительно</string>
     </property>
+    <property name="separatorsCollapsible">
+     <bool>false</bool>
+    </property>
+    <property name="toolTipsVisible">
+     <bool>true</bool>
+    </property>
     <widget class="QMenu" name="menu_5">
+     <property name="statusTip">
+      <string>Утилиты для получения нагрузки</string>
+     </property>
      <property name="title">
       <string>Загрузка БС</string>
      </property>
+     <property name="separatorsCollapsible">
+      <bool>true</bool>
+     </property>
      <addaction name="actionLoadStats"/>
      <addaction name="actionCharger"/>
+     <addaction name="actionLoadMaster"/>
     </widget>
     <addaction name="actionMultiAlex"/>
     <addaction name="menu_5"/>
@@ -1194,11 +1210,6 @@ padding-right:5px;
     </font>
    </property>
   </widget>
-  <action name="actionExit">
-   <property name="text">
-    <string>Exit</string>
-   </property>
-  </action>
   <action name="aboutQt">
    <property name="text">
     <string>О Qt...</string>
@@ -1218,15 +1229,29 @@ padding-right:5px;
    <property name="text">
     <string>MultiAlex</string>
    </property>
+   <property name="statusTip">
+    <string>Запуск сторонней утилиты для хранения команд и генерации HO файлов</string>
+   </property>
   </action>
   <action name="actionLoadStats">
    <property name="text">
     <string>LoadStats</string>
    </property>
+   <property name="statusTip">
+    <string>Запуск сторонней утилиты для получених данных нагрузки секторов</string>
+   </property>
   </action>
   <action name="actionCharger">
    <property name="text">
     <string>Charger</string>
+   </property>
+   <property name="statusTip">
+    <string>Запуск сторонней утилиты для получения данных нагрузки RBS определённого р-на</string>
+   </property>
+  </action>
+  <action name="actionLoadMaster">
+   <property name="text">
+    <string>LoadMaster</string>
    </property>
   </action>
  </widget>

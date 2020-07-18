@@ -42,5 +42,8 @@
         <file>changelog</file>
         <file>images/changeProfile.png</file>
         <file>images/maps.png</file>
+        <file>images/chartger.png</file>
+        <file>images/load-stat.png</file>
+        <file>images/multi-alex.png</file>
     </qresource>
 </RCC>

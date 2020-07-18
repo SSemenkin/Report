@@ -14,12 +14,9 @@
 #include <QSqlError>
 #include <QtCharts/QtCharts>
 #include <QFile>
-#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QTableView>
-#include <QPalette>
-#include <QLinearGradient>
 #include <QScrollArea>
 #include <QDateTime>
 #include <QTabWidget>
@@ -83,7 +80,7 @@ private slots:
 
     void changeText();
 
-    QMap<QString,QMap<QString,double>> calculateFrequences(QSqlQueryModel* model,bool flagCells = true);
+    QMap<QString,QMap<QString,double>> calculateFrequences(QSqlQueryModel* model,int flagCells = 0);
 
 signals:
     void threadFinished(bool);

@@ -67,7 +67,7 @@ void TelnetRegister::processAnswersFromHLR()
            __pdpcp = subString(reply,"pdpcp-").left(7).right(1) == "1" ? "3" : "1";
            socket->write(QString("hgsdc:msisdn = "+__abonent+",sud=pdpcp-"+__pdpcp+";\r\n").toUtf8());
         }
-        else if(!subString(reply,"ecuted").isEmpty() ){
+        else if(!subString(reply,"ecuted").isEmpty() && !countCommands){
            countCommands ++;
            timer->stop();
            socket->disconnectFromHost();
@@ -77,8 +77,9 @@ void TelnetRegister::processAnswersFromHLR()
 
     } else if(__behavior == OperationBehavior::Reregister){
         if(!subString(reply,"end").isEmpty()){
-           __imsi = subString(reply,"255995000").left(16);
+           __imsi = subString(reply,"25599500").left(16);
            __pdpcp = subString(reply,"pdpcp-").left(7).right(1);
+           __caw = subString(reply,"caw-").left(5).right(1);
            socket->write(QString("hgsue:msisdn = "+__abonent+";\r\n").toUtf8());
         }
         else if(!subString(reply,"ecuted").isEmpty() && countCommands == 0){
@@ -88,6 +89,10 @@ void TelnetRegister::processAnswersFromHLR()
         }
         else if(!subString(reply,"ecuted").isEmpty() && countCommands == 1){
             countCommands ++;
+            socket->write(QString("hgsdc:msisdn = "+__abonent+",sud=caw-"+__caw+";\r\n").toUtf8());
+        }
+        else if(!subString(reply,"ecuted").isEmpty() && countCommands == 2){
+            countCommands++;
             timer->stop();
             socket->disconnectFromHost();
             emit successed();
@@ -126,9 +131,9 @@ void TelnetRegister::validateNumber(const QString number)
 QString TelnetRegister::subString(const QString text, const QString buffer)
 {
     for(int i=0;i<text.length()-buffer.length();i++){
-        QString tmp = text.right(text.length()-1-i).left(buffer.length());
+        QString tmp = text.right(text.length()-i).left(buffer.length());
         if(tmp == buffer){
-            return text.right(text.length()-1-i);
+            return text.right(text.length()-i);
         }
     }
     return "";

@@ -199,7 +199,7 @@ QChartView *AnalyseData::buildPieChart()
 
     CustomSlice *slice;
 
-    for(int i=0;i<chastoti.size() && i < 20;i++)
+    for(int i=0;i<chastoti.size();i++)
     {
         slice = new CustomSlice(chastoti[i].first,chastoti[i].second);
         customSlices.push_back(slice);
@@ -225,6 +225,8 @@ QChartView *AnalyseData::buildPieChart()
 
     QChartView *chartView = new QChartView();
     chartView->setRenderHint(QPainter::Antialiasing);
+    chartView->setVerticalScrollBar(new QScrollBar());
+    chartView->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
     chartView->setChart(pieChart);
     pieChart->setTitleFont(font);
     pieChart->legend()->setFont(font);
@@ -235,6 +237,17 @@ QChartView *AnalyseData::buildPieChart()
 
 QChartView *AnalyseData::buildEDRPieChart(QMap<QString,int> chartData)
 {
+    QVector<QPair<QString,int>> data;
+    for(auto i = chartData.begin();i != chartData.end();++i) {
+        data.push_back(QPair<QString,int>(i.key(),i.value()));
+    }
+    for(int j=0;j<data.size();j++)
+    for(int i=0;i<data.size()-1;i++){
+      if( data[i].second < data[i+1].second ) {
+          swap(data[i],data[i+1]);
+      }
+    }
+
     QFont font;
     font.setBold(true);
     font.setPixelSize(14);
@@ -250,8 +263,25 @@ QChartView *AnalyseData::buildEDRPieChart(QMap<QString,int> chartData)
 
     CustomSlice *slice;
 
-    for(auto it = chartData.begin ();it!=chartData.end ();++it){
-        slice = new CustomSlice(it.key (),chartData[it.key ()]);
+    for(auto it = 0;it < data.size();it++){
+        QString sliceName = data[it].first;
+        if(sliceName.toInt()>30000) {
+            sliceName = "(3G)" + sliceName ;
+        } else {
+            QString cell = sliceName.right(1) == "1" ? "A" :
+                                                       sliceName.right(1) == "2" ? "B" : "C";
+            if(sliceName.length() == 5 ){
+                sliceName = "LU" + sliceName.left(4) + cell;
+            } else {
+                int zeroNumber = 4 - sliceName.length();
+                QString tmpName = "LUG";
+                for (int i=0;i<zeroNumber;i++) {
+                    tmpName += "0";
+                }
+                sliceName = tmpName + sliceName.left(sliceName.length()-1) + cell;
+            }
+        }
+        slice = new CustomSlice(sliceName,data[it].second);
 
         slice->setLabelFont(font);
         slice->setLabelPosition (CustomSlice::LabelPosition::LabelOutside);
@@ -263,6 +293,8 @@ QChartView *AnalyseData::buildEDRPieChart(QMap<QString,int> chartData)
 
     QChartView *chartView = new QChartView();
     chartView->setRenderHint(QPainter::Antialiasing);
+    chartView->setVerticalScrollBar(new QScrollBar());
+    chartView->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
     chartView->setChart(pieChart);
     pieChart->setTitleFont(font);
     pieChart->legend()->setFont(font);
@@ -278,6 +310,8 @@ QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
     font.setPixelSize(14);
 
     QTabWidget *tabWidget = new QTabWidget();
+    QVBoxLayout *l = new QVBoxLayout(tabWidget);
+    QVBoxLayout *l2 = new QVBoxLayout(tabWidget);
     QChart *icmChart = new QChart();
     QChart *chargeChart = new QChart();
     chargeChart->setFont(font);
@@ -290,7 +324,7 @@ QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
     if(days==1)
         chargeChart->setTitle("График нагрузки на сектора 2G за последние сутки,\nс которых звонил абонент");
     else chargeChart->setTitle("График нагрузки на сектора 2G за последние "+QString::number(abs(days))+ " суток,\nс которых звонил абонент");
-    chargeChart->setAnimationOptions(QChart::SeriesAnimations);
+    chargeChart->setAnimationOptions(QChart::AllAnimations);
     chargeChart->legend()->setAlignment(Qt::AlignRight);
     icmChart->setTitle("Интерференция на данных секторах");
     icmChart->setAnimationOptions(QChart::AllAnimations);
@@ -298,14 +332,12 @@ QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
 
     QDateTimeAxis *axisX = new QDateTimeAxis;
     axisX->setTitleText("Время");
-    axisX->setTickCount(10);
     if(days==1) axisX->setFormat("hh:mm");
     else axisX->setFormat("dd-MM hh:mm");
     chargeChart->addAxis(axisX,Qt::AlignBottom);
 
     QDateTimeAxis *axisXi = new QDateTimeAxis;
     axisXi->setTitleText("Время");
-    axisXi->setTickCount(10);
     if(days==1) axisXi->setFormat("hh:mm");
     else axisXi->setFormat("dd-MM hh:mm");
     icmChart->addAxis(axisXi,Qt::AlignBottom);
@@ -354,8 +386,110 @@ QTabWidget *AnalyseData::buildLineCharts(QVector<cell2G> cells2G)
     chartView->setRenderHint(QPainter::Antialiasing);
     QChartView *chartViewi = new QChartView(icmChart);
     chartViewi->setRenderHint(QPainter::Antialiasing);
-    tabWidget->addTab(chartView,"Загрузка");
-    tabWidget->addTab(chartViewi,"Интерференция");
+    chartView->setVerticalScrollBar(new QScrollBar());
+    chartView->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
+    chartViewi->setVerticalScrollBar(new QScrollBar());
+    chartViewi->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
+    chartView->setRubberBand(QChartView::RubberBand::HorizontalRubberBand);
+    chartViewi->setRubberBand(QChartView::RubberBand::HorizontalRubberBand);
+
+    const auto markers = chartView->chart()->legend()->markers();
+
+    for(QLegendMarker *marker: markers) {
+        QObject::connect(marker, &QLegendMarker::clicked, [=](){
+                    marker->series()->setVisible(!marker->series()->isVisible());
+                    marker->setVisible(true);
+                    qreal alpha = 1.0;
+
+                    if (!marker->series()->isVisible())
+                        alpha = 0.5;
+
+                    QColor color;
+                    QBrush brush = marker->labelBrush();
+                    color = brush.color();
+                    color.setAlphaF(alpha);
+                    brush.setColor(color);
+                    marker->setLabelBrush(brush);
+
+                    brush = marker->brush();
+                    color = brush.color();
+                    color.setAlphaF(alpha);
+                    brush.setColor(color);
+                    marker->setBrush(brush);
+
+                    QPen pen = marker->pen();
+                    color = pen.color();
+                    color.setAlphaF(alpha);
+                    pen.setColor(color);
+                    marker->setPen(pen);
+
+        });
+    }
+
+    const auto markers2 = chartViewi->chart()->legend()->markers();
+    for(QLegendMarker *marker: markers2) {
+        QObject::connect(marker, &QLegendMarker::clicked, [=](){
+            marker->series()->setVisible(!marker->series()->isVisible());
+            marker->setVisible(true);
+            qreal alpha = 1.0;
+
+            if (!marker->series()->isVisible())
+                alpha = 0.5;
+
+            QColor color;
+            QBrush brush = marker->labelBrush();
+            color = brush.color();
+            color.setAlphaF(alpha);
+            brush.setColor(color);
+            marker->setLabelBrush(brush);
+
+            brush = marker->brush();
+            color = brush.color();
+            color.setAlphaF(alpha);
+            brush.setColor(color);
+            marker->setBrush(brush);
+
+            QPen pen = marker->pen();
+            color = pen.color();
+            color.setAlphaF(alpha);
+            pen.setColor(color);
+            marker->setPen(pen);
+
+        });
+    }
+    QWidget *w = new QWidget;
+    QWidget *w2 = new QWidget;
+
+    QPushButton *pb = new QPushButton("Скрыть всё");
+    QPushButton *pb2 = new QPushButton("Скрыть всё");
+
+    l->addWidget(chartView);
+    l->addWidget(pb);
+    l2->addWidget(chartViewi);
+    l2->addWidget(pb2);
+
+    QObject::connect(pb, &QPushButton::clicked, [=](){
+        const auto markers3 = chartView->chart()->legend()->markers();
+        for(QLegendMarker *marker:markers3){
+            marker->series()->setVisible(!marker->series()->isVisible());
+            marker->setVisible(true);
+        }
+    });
+    QObject::connect(pb2, &QPushButton::clicked, [=](){
+        const auto markers4 = chartViewi->chart()->legend()->markers();
+        for(QLegendMarker *marker:markers4){
+            marker->series()->setVisible(!marker->series()->isVisible());
+            marker->setVisible(true);
+        }
+    });
+
+    w->setLayout(l);
+    w2->setLayout(l2);
+
+    tabWidget->addTab(w,"Загрузка");
+    tabWidget->addTab(w2,"Интерференция");
+
+
     return tabWidget;
 }
 
@@ -374,10 +508,11 @@ QTabWidget *AnalyseData::buildPieCharts()
         if(chartData.size ())
             widget->addTab (buildEDRPieChart (chartData),"Частоты EDR");
     }
-    widget->addTab (buildPieChart(),"Частоты секторов");
+    widget->addTab (buildPieChart(),"Частоты CDR");
     if(days == 0){
-        widget->addTab (buildDonutChart (calculateFrequences (hideModel)),"Соотношения звонков");
-        widget->addTab (buildDonutChart (calculateFrequences (hideModel,false)), "Соотношения звонков по датам");
+        widget->addTab (buildDonutChart (calculateFrequences (hideModel,2)), "Соотношения типа звонков по-секторно");
+        widget->addTab (buildDonutChart (calculateFrequences (hideModel,1)),"Соотношения звонков");
+        widget->addTab (buildDonutChart (calculateFrequences (hideModel)), "Соотношения звонков по датам");
     }
     return widget;
 }
@@ -402,14 +537,15 @@ QChartView *AnalyseData::buildDonutChart(QMap<QString, QMap<QString, double> > d
         }
     }
     QChartView *view = new QChartView(donutBreakdown);
+    view->setVerticalScrollBar(new QScrollBar());
     view->setRenderHint (QPainter::Antialiasing);
     return view;
 }
 
-QMap<QString, QMap<QString, double> > AnalyseData::calculateFrequences(QSqlQueryModel *model,bool flagCells)
+QMap<QString, QMap<QString, double> > AnalyseData::calculateFrequences(QSqlQueryModel *model,int flagCells)
 {
     QMap<QString,QMap<QString,double>> result;
-    if(flagCells){
+    if(flagCells == 1) {
         for(int i=0;i<model->rowCount();i++){
             if(model->index (i,1).data ().toString () == currAbon){
                 result["Исходящие"][model->index (i,2).data().toString ()] ++;
@@ -417,13 +553,18 @@ QMap<QString, QMap<QString, double> > AnalyseData::calculateFrequences(QSqlQuery
                 result["Входящие"][model->index (i,1).data().toString ()] ++;
             }
         }
-    } else {
+    } else if(flagCells == 0) {
         for(int i=0;i<model->rowCount();i++){
             if(model->index (i,1).data ().toString () == currAbon){
                 result[model->index (i,3).data().toString ()][model->index (i,2).data().toString ()] ++;
             } else {
                 result[model->index (i,3).data ().toString ()][model->index (i,1).data().toString ()] ++;
             }
+        }
+    } else if(flagCells == 2) {
+        for(int i=0;i<model->rowCount();i++){
+            model->index (i,1).data ().toString () == currAbon ? result["Исходящие"][model->index(i,9).data().toString()] ++ :
+                                                                 result["Входящие"] [model->index(i,9).data().toString()] ++ ;
         }
     }
     return result;
@@ -481,7 +622,7 @@ void AnalyseData::swap(QPair<QString,int> &a,QPair<QString,int> &b)
 
 void AnalyseData::updateWindowWidgets()
 {
-    this->setWindowTitle("Исходящие абонента "+currAbon);
+    this->setWindowTitle("Данные абонента "+currAbon);
     this->setWindowIcon(QIcon(":/images/detail.png"));
 }
 

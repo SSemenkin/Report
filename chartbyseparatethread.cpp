@@ -38,7 +38,7 @@ QVector<cell2G> ChartBySeparateThread::getChargeOf2GCellsFromMySQL()
         QString query;
         for(int i=0;i<cells.size();i++)
         {
-            query = "select TCH,SPEECH,GPRS,TIME,INTERFERENCE from bscrecords where RBS='"+cells[i].left(6)+"' and CELLNAME = '"+cells[i].right(1)+"' and TIME between '"+QDateTime::currentDateTime().addDays(-days).toString(Qt::ISODate)
+            query = "select TCH - BLOC as TCH,SPEECH,GPRS,TIME,INTERFERENCE from bscrecords where RBS='"+cells[i].left(6)+"' and CELLNAME = '"+cells[i].right(1)+"' and TIME between '"+QDateTime::currentDateTime().addDays(-days).toString(Qt::ISODate)
                     +"' and '"+QDateTime::currentDateTime().toString(Qt::ISODate)+"' order by TIME";
 
             chargeModel->setQuery(query,mysqldataBase);
@@ -48,7 +48,9 @@ QVector<cell2G> ChartBySeparateThread::getChargeOf2GCellsFromMySQL()
             for(int j=0;j<chargeModel->rowCount();j++)
             {
                 tmp.dates.push_back(QDateTime::fromString(chargeModel->data(chargeModel->index(j,3)).toString(),Qt::ISODate));
-                tmp.charges.push_back(((chargeModel->index(j,1).data().toFloat()+chargeModel->index(j,2).data().toFloat()) / chargeModel->index(j,0).data().toFloat())*100.0);
+                if(chargeModel->index(j,0).data().toFloat() != 0.0) {
+                    tmp.charges.push_back(((chargeModel->index(j,1).data().toFloat()+chargeModel->index(j,2).data().toFloat()) / chargeModel->index(j,0).data().toFloat())*100.0);
+                } else tmp.charges.push_back(100);
                 tmp.inter.push_back(chargeModel->index(j,4).data().toInt());
             }
             result[i] = tmp;
@@ -60,6 +62,7 @@ QVector<cell2G> ChartBySeparateThread::getChargeOf2GCellsFromMySQL()
 
     } else {
          emit dataBaseDontOpen();
+         return QVector<cell2G>();
     }
     returneD = result;
 

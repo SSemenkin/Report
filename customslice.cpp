@@ -46,7 +46,7 @@ CustomSlice::CustomSlice(QString label, qreal value)
         green -=50;
     }
     setBrush(QColor(red,green,blue));
-    setLabelArmLengthFactor(0);
+    setLabelArmLengthFactor(0.0);
 
 
     connect(this, &CustomSlice::hovered, this, &CustomSlice::showHighlight);
